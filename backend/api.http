@@ -1,0 +1,45 @@
+### GET ALL MOVIES
+GET http://localhost:5000/movies
+
+
+### GET MOVIE BY ID
+GET http://localhost:5000/movies/1
+
+
+
+### CREATE MOVIE
+POST http://localhost:5000/movies/create
+Content-Type: application/json
+
+
+{
+    "title": "Inception",
+    "description": "A thief enters the dreams of others to steal secrets.",
+    "genre": "Sci-Fi",
+    "language": "English",
+    "duration_min": 148,
+    "rating": 5,
+    "poster_url": "https://static1.srcdn.com/wordpress/wp-content/uploads/2020/01/Inception-Movie-Poster.jpg",
+    "trailer_url": "https://www.bing.com/videos/riverview/relatedvideo?q=inception&&mid=594F8B54EBE4BB4C9687594F8B54EBE4BB4C9687&churl=https%3a%2f%2fwww.youtube.com%2fchannel%2fUCTCjFFoX1un-j7ni4B6HJ3Q&FORM=VRDGAR",
+    "release_date": "2010-07-16"
+}
+
+
+### UPDATE MOVIE
+PUT http://localhost:5000/movies/update/2
+Content-Type: application/json
+
+{
+    "title": "Inception Updated",
+    "description": "A skilled thief enters people's dreams to steal valuable secrets.",
+    "genre": "Sci-Fi",
+    "language": "English",
+    "duration_min": 148,
+    "rating": 5,
+    "poster_url": "https://example.com/inception-new.jpg",
+    "trailer_url": "https://example.com/inception-trailer",
+    "release_date": "2010-07-16"
+}
+
+### DELETE MOVIE
+DELETE http://localhost:5000/movies/delete/2
