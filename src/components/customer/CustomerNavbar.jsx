@@ -9,7 +9,9 @@ import {
   Sparkles,
   Star,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../../auth/AuthContext";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 
 export default function CustomerNavbar({
@@ -22,6 +24,7 @@ export default function CustomerNavbar({
   onSelectMovieDirect,
 }) {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const { user, logout } = useAuth();
 
   // Suggestions for live search dropdown
   const searchSuggestions = searchQuery.trim().length >= 1
@@ -146,14 +149,23 @@ export default function CustomerNavbar({
           </button>
 
           {/* User Profile */}
-          <div className="nav-user-profile" title="CinePass Club Member">
+          <div className="nav-user-profile" title={user?.email}>
             <div className="user-avatar-circle">
               <User size={15} />
             </div>
             <div className="user-info-text">
-              <span className="user-name">Alex Mercer</span>
-              <span className="user-tier">Superstar VIP</span>
+              <span className="user-name">{user?.name}</span>
+              <span className="user-tier">CinePass Member</span>
             </div>
+            <button
+              type="button"
+              onClick={logout}
+              title="Sign out"
+              aria-label="Sign out"
+              style={{ background: "none", border: 0, color: "#94a3b8", cursor: "pointer", padding: 6, marginLeft: 4 }}
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </div>

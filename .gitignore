@@ -25,3 +25,7 @@ dist-ssr
 
 # Agents
 .agents/
+
+# Secrets & auth database
+.env
+server/auth.db*
