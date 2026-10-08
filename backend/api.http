@@ -75,3 +75,33 @@ Content-Type: application/json
 
 ### DELETE THEATRE
 DELETE http://localhost:5000/theatres/delete/99
+
+
+### GET ALL SCREENS
+GET http://localhost:5000/screens
+
+
+### GET SCREEN BY ID
+GET http://localhost:5000/screens/1
+
+
+### CREATE SCREEN
+POST http://localhost:5000/screens/create
+Content-Type: application/json
+
+{
+    "theatre_id": 1,
+    "name": "Screen 1"
+}
+
+### UPDATE SCREEN
+PUT http://localhost:5000/screens/update/1
+Content-Type: application/json
+
+{
+    "theatre_id": 1,
+    "name": "Screen 1 Updated"
+}
+
+### DELETE SCREEN
+DELETE http://localhost:5000/screens/delete/1

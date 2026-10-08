@@ -4,6 +4,7 @@ const { connectDB } = require("./config/db");
 
 const movieRoutes = require("./routes/movieRoutes.js");
 const theatreRoutes = require("./routes/theatreRoutes.js");
+const screenRoutes = require("./routes/screenRoutes");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use("/", movieRoutes);
 app.use("/", theatreRoutes);
+app.use("/", screenRoutes);
 
 app.get("/", (req, res) => {
     res.json({
