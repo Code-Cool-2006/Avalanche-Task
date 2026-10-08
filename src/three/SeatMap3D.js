@@ -382,26 +382,49 @@ export class SeatMap3D {
   }
 
   updateSeatMaterials() {
-    this.seatList.forEach(({ seat, seatGroup }) => {
+    this.seatList.forEach(({ seat, material, seatGroup }) => {
       const colorHex = this.getSeatColor(seat);
       const isSelected = this.selectedIds.has(seat.id) || seat.status === 'my_locked';
 
-      // Traverse cushions and update
-      seatGroup.children.forEach((child) => {
-        if (child.material && child.material.visible !== false && child.material.color) {
-          // Skip armrests (which stay dark grey)
-          if (child.geometry && child.geometry.parameters && child.geometry.parameters.width === 0.1) return;
-
-          child.material.color.setHex(colorHex);
+      // 1. Direct material update
+      if (material) {
+        if (material.color) {
+          material.color.setHex(colorHex);
+        }
+        if (material.emissive) {
           if (isSelected) {
-            child.material.emissive.setHex(0x10b981);
-            child.material.emissiveIntensity = 0.45;
+            material.emissive.setHex(0x10b981);
+            material.emissiveIntensity = 0.45;
           } else {
-            child.material.emissive.setHex(0x000000);
-            child.material.emissiveIntensity = 0.0;
+            material.emissive.setHex(0x000000);
+            material.emissiveIntensity = 0.0;
           }
         }
-      });
+      }
+
+      // 2. Safe traversal for child meshes (skip armrests and hitboxes)
+      if (seatGroup && seatGroup.children) {
+        seatGroup.children.forEach((child) => {
+          if (!child || !child.material) return;
+          // Skip raycast hitBox (has seatId in userData)
+          if (child.userData && child.userData.seatId) return;
+          // Skip armrests (width === 0.1)
+          if (child.geometry?.parameters?.width === 0.1) return;
+
+          if (child.material.color) {
+            child.material.color.setHex(colorHex);
+          }
+          if (child.material.emissive) {
+            if (isSelected) {
+              child.material.emissive.setHex(0x10b981);
+              child.material.emissiveIntensity = 0.45;
+            } else {
+              child.material.emissive.setHex(0x000000);
+              child.material.emissiveIntensity = 0.0;
+            }
+          }
+        });
+      }
     });
   }
 
@@ -564,7 +587,7 @@ export class SeatMap3D {
     }
 
     // Subtle gentle screen flicker to simulate vibrant movie projection
-    if (this.screenMesh && this.screenMesh.material) {
+    if (this.screenMesh && this.screenMesh.material && typeof this.screenMesh.material.emissiveIntensity === 'number') {
       const time = Date.now() * 0.002;
       this.screenMesh.material.emissiveIntensity = 0.52 + Math.sin(time) * 0.06;
     }
