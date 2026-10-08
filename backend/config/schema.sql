@@ -1,0 +1,194 @@
+-- ============================================================================
+-- CINEMA & BOOKING RELATIONAL DATABASE SCHEMA (PostgreSQL)
+-- ============================================================================
+
+-- 1. USERS & SECURITY TABLES
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(20) DEFAULT 'user',
+  phone TEXT,
+  verified INTEGER DEFAULT 0,
+  fails INTEGER DEFAULT 0,
+  locked_until BIGINT DEFAULT 0,
+  created BIGINT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS otps (
+  email TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  expires BIGINT NOT NULL,
+  tries INTEGER DEFAULT 0,
+  sent BIGINT NOT NULL,
+  PRIMARY KEY (email, purpose)
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL,
+  expires BIGINT NOT NULL,
+  revoked INTEGER DEFAULT 0,
+  ip TEXT,
+  ua TEXT,
+  created BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS audit (
+  ts BIGINT NOT NULL,
+  event TEXT NOT NULL,
+  email TEXT,
+  ip TEXT,
+  detail TEXT
+);
+
+-- 2. MOVIES, THEATRES, SCREENS & PHYSICAL SEATS
+CREATE TABLE IF NOT EXISTS movies (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  genre VARCHAR(100),
+  language VARCHAR(50),
+  duration_min INTEGER,
+  rating NUMERIC(3, 1) DEFAULT 8.0,
+  poster_url TEXT,
+  trailer_url TEXT,
+  release_date DATE
+);
+
+CREATE TABLE IF NOT EXISTS theatres (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  address TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS screens (
+  id SERIAL PRIMARY KEY,
+  theatre_id INTEGER NOT NULL REFERENCES theatres(id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL,
+  UNIQUE (id, theatre_id)
+);
+
+CREATE TABLE IF NOT EXISTS seats (
+  id SERIAL PRIMARY KEY,
+  screen_id INTEGER NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
+  row_label VARCHAR(5) NOT NULL,
+  seat_number INTEGER NOT NULL,
+  tier VARCHAR(20) DEFAULT 'regular' CHECK (tier IN ('regular', 'premium', 'recliner')),
+  UNIQUE (screen_id, row_label, seat_number)
+);
+
+-- 3. SHOWS & SHOW-SPECIFIC SEATS (Availability & Concurrency Engine)
+CREATE TABLE IF NOT EXISTS shows (
+  id SERIAL PRIMARY KEY,
+  movie_id INTEGER NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+  theatre_id INTEGER NOT NULL REFERENCES theatres(id) ON DELETE CASCADE,
+  screen_id INTEGER NOT NULL,
+  FOREIGN KEY (screen_id, theatre_id) REFERENCES screens(id, theatre_id) ON DELETE CASCADE,
+  start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  end_time TIMESTAMP WITH TIME ZONE,
+  language VARCHAR(50) DEFAULT 'English',
+  format VARCHAR(50) DEFAULT '2D',
+  price_regular NUMERIC(10, 2) NOT NULL DEFAULT 180.00,
+  price_premium NUMERIC(10, 2) NOT NULL DEFAULT 260.00,
+  price_recliner NUMERIC(10, 2) NOT NULL DEFAULT 420.00,
+  status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED' CHECK (status IN ('SCHEDULED', 'RUNNING', 'COMPLETED', 'CANCELLED')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS show_seats (
+  id SERIAL PRIMARY KEY,
+  show_id INTEGER NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+  seat_id INTEGER NOT NULL REFERENCES seats(id) ON DELETE CASCADE,
+  status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'LOCKED', 'BOOKED')),
+  locked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  locked_until TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (show_id, seat_id)
+);
+
+-- 4. BOOKINGS & HISTORICAL SEAT SNAPSHOTS
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  show_id INTEGER NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+  booking_code VARCHAR(50) UNIQUE NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED', 'EXPIRED')),
+  subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  food_total NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  convenience_fee NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  discount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS booking_seats (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  seat_id INTEGER NOT NULL REFERENCES seats(id) ON DELETE CASCADE,
+  unit_price NUMERIC(10, 2) NOT NULL,
+  row_label VARCHAR(5) NOT NULL,
+  seat_number INTEGER NOT NULL,
+  tier VARCHAR(20) NOT NULL,
+  UNIQUE (booking_id, seat_id)
+);
+
+-- 5. FOOD & CONCESSIONS
+CREATE TABLE IF NOT EXISTS food_items (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  category VARCHAR(50) NOT NULL CHECK (category IN ('Popcorn', 'Combos', 'Beverages', 'Snacks', 'Hot Food', 'Desserts')),
+  price NUMERIC(10, 2) NOT NULL,
+  image_url TEXT,
+  available BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS booking_food (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  food_item_id INTEGER NOT NULL REFERENCES food_items(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price NUMERIC(10, 2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. PAYMENTS & TICKETS
+CREATE TABLE IF NOT EXISTS payments (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount NUMERIC(10, 2) NOT NULL,
+  currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+  provider VARCHAR(50) NOT NULL DEFAULT 'UPI',
+  provider_payment_id VARCHAR(100),
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'REFUNDED')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER UNIQUE NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  ticket_number VARCHAR(60) UNIQUE NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'ISSUED' CHECK (status IN ('ISSUED', 'USED', 'CANCELLED', 'EXPIRED')),
+  issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. PERFORMANCE & CONCURRENCY INDEXES
+CREATE INDEX IF NOT EXISTS idx_shows_movie_theatre ON shows(movie_id, theatre_id, start_time);
+CREATE INDEX IF NOT EXISTS idx_show_seats_show_status ON show_seats(show_id, status);
+CREATE INDEX IF NOT EXISTS idx_show_seats_locked ON show_seats(status, locked_until);
+CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_booking_seats_booking ON booking_seats(booking_id);
+CREATE INDEX IF NOT EXISTS idx_booking_food_booking ON booking_food(booking_id);
+CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   X,
   Clock,
@@ -10,15 +10,15 @@ import {
   ShieldAlert,
   Sparkles,
   Users,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import SeatMap2D from "./SeatMap2D";
 import SeatMap3DView from "./SeatMap3DView";
 import {
-  getShowSeatsState,
-  lockSeat,
-  unlockSeat,
-  unlockAllMySeats,
+  fetchShowSeatsFromApi,
 } from "../../services/customerBookingService";
+import { useAuth } from "../../auth/AuthContext";
 
 const SEAT_COUNTS = [
   { count: 1, icon: "🚲", vehicle: "Cycle" },
@@ -37,6 +37,8 @@ export default function SeatSelectionModal({
   onClose,
   onProceedToFnb,
 }) {
+  const { user } = useAuth();
+
   // Step 1: "How many seats?" BookMyShow pre-selector
   const [hasChosenSeatCount, setHasChosenSeatCount] = useState(false);
   const [desiredSeatCount, setDesiredSeatCount] = useState(2);
@@ -45,110 +47,65 @@ export default function SeatSelectionModal({
   const [seatsData, setSeatsData] = useState({ rows: [], allSeats: [], pricing: {} });
   const [selectedSeatIds, setSelectedSeatIds] = useState([]);
   const [lastSelectedSeatId, setLastSelectedSeatId] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
-  const [timerActive, setTimerActive] = useState(false);
+  const [isLoadingSeats, setIsLoadingSeats] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Load seats state on mount and poll
-  const refreshSeats = () => {
+  // Load backend show seat availability on mount and poll
+  const refreshSeats = useCallback(async () => {
+    if (!showId) return;
     try {
-      const state = getShowSeatsState(showId);
+      const state = await fetchShowSeatsFromApi(showId);
       setSeatsData(state);
-
-      // Check if user has already locked seats
-      const myLocked = state.allSeats.filter((s) => s.status === "my_locked");
-      if (myLocked.length > 0) {
-        setSelectedSeatIds(myLocked.map((s) => s.id));
-        setTimerActive(true);
-        if (myLocked[0].lockExpiresAt) {
-          const expTime = new Date(myLocked[0].lockExpiresAt).getTime();
-          const remainingSecs = Math.max(0, Math.floor((expTime - Date.now()) / 1000));
-          setTimeLeft(remainingSecs);
-        }
-      }
+      setErrorMessage("");
     } catch (err) {
-      console.error("Error refreshing seats:", err);
+      console.error("Error fetching show seats from backend:", err);
+      setErrorMessage(err.message || "Failed to load seat availability from server");
+    } finally {
+      setIsLoadingSeats(false);
     }
-  };
-
-  useEffect(() => {
-    refreshSeats();
-    const interval = setInterval(refreshSeats, 6000);
-    return () => clearInterval(interval);
   }, [showId]);
 
-  // Countdown timer for seat locks
   useEffect(() => {
-    let timer;
-    if (timerActive && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setTimerActive(false);
-            unlockAllMySeats(showId);
-            setSelectedSeatIds([]);
-            setErrorMessage("Your 5-minute seat reservation expired. Seats have been freed.");
-            refreshSeats();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [timerActive, timeLeft, showId]);
+    setIsLoadingSeats(true);
+    refreshSeats();
+    const interval = setInterval(refreshSeats, 8000);
+    return () => clearInterval(interval);
+  }, [refreshSeats]);
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Toggle seat selection with lock / unlock
+  // Toggle seat selection (UI state only - authoritative lock happens on backend reserve)
   const handleToggleSeat = (seatId) => {
     setErrorMessage("");
-    const isCurrentlySelected = selectedSeatIds.includes(seatId);
+    const seatObj = seatsData.allSeats.find((s) => String(s.id) === String(seatId) || String(s.seat_id) === String(seatId));
+
+    if (seatObj && (seatObj.status === "booked" || seatObj.status === "locked_other")) {
+      setErrorMessage(
+        seatObj.status === "booked"
+          ? `Seat ${seatObj.row}${seatObj.number} is already booked.`
+          : `Seat ${seatObj.row}${seatObj.number} is currently held by another user.`
+      );
+      return;
+    }
+
+    const strSeatId = String(seatId);
+    const isCurrentlySelected = selectedSeatIds.includes(strSeatId);
 
     if (isCurrentlySelected) {
-      try {
-        unlockSeat(showId, seatId);
-        const updated = selectedSeatIds.filter((id) => id !== seatId);
-        setSelectedSeatIds(updated);
-        if (updated.length === 0) {
-          setTimerActive(false);
-        }
-        refreshSeats();
-      } catch (err) {
-        setErrorMessage(err.message || "Failed to release seat");
-      }
+      const updated = selectedSeatIds.filter((id) => id !== strSeatId);
+      setSelectedSeatIds(updated);
     } else {
       if (selectedSeatIds.length >= desiredSeatCount) {
         setErrorMessage(
-          `You selected ${desiredSeatCount} ${desiredSeatCount === 1 ? "seat" : "seats"} earlier. Deselect one or change seat count.`
+          `You selected ${desiredSeatCount} ${desiredSeatCount === 1 ? "seat" : "seats"} earlier. Deselect one or change party size.`
         );
         return;
       }
-
-      try {
-        const res = lockSeat(showId, seatId);
-        if (res.success) {
-          setSelectedSeatIds([...selectedSeatIds, seatId]);
-          setLastSelectedSeatId(seatId);
-          if (!timerActive) {
-            setTimerActive(true);
-            setTimeLeft(300);
-          }
-          refreshSeats();
-        }
-      } catch (err) {
-        setErrorMessage(err.message || "Seat could not be selected.");
-        refreshSeats();
-      }
+      setSelectedSeatIds([...selectedSeatIds, strSeatId]);
+      setLastSelectedSeatId(strSeatId);
     }
   };
 
   // Pricing calculation
-  const physicalMap = new Map(seatsData.allSeats.map((s) => [s.id, s]));
+  const physicalMap = new Map(seatsData.allSeats.map((s) => [String(s.id), s]));
   const selectedSeatsList = selectedSeatIds
     .map((id) => physicalMap.get(id))
     .filter(Boolean);
@@ -163,6 +120,10 @@ export default function SeatSelectionModal({
       setErrorMessage("Please pick your seats to proceed.");
       return;
     }
+    if (selectedSeatIds.length < desiredSeatCount) {
+      setErrorMessage(`Please pick ${desiredSeatCount} ${desiredSeatCount === 1 ? "seat" : "seats"} as selected.`);
+      return;
+    }
     onProceedToFnb({
       showId,
       seatIds: selectedSeatIds,
@@ -174,9 +135,6 @@ export default function SeatSelectionModal({
   };
 
   const handleClose = () => {
-    if (selectedSeatIds.length > 0) {
-      unlockAllMySeats(showId);
-    }
     onClose();
   };
 
@@ -360,7 +318,13 @@ export default function SeatSelectionModal({
 
         {/* Main Seat Map Viewport */}
         <div className="seat-modal-body-viewport">
-          {viewMode === "2d" ? (
+          {isLoadingSeats ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", minHeight: "350px", color: "#94a3b8" }}>
+              <Loader2 size={40} className="auth-spin" style={{ color: "var(--crimson-500, #f84464)", marginBottom: "16px" }} />
+              <h3>Loading Auditorium Layout & Real-time Seats...</h3>
+              <p>Checking latest seat availability</p>
+            </div>
+          ) : viewMode === "2d" ? (
             <SeatMap2D
               rows={seatsData.rows}
               selectedSeatIds={selectedSeatIds}

@@ -17,10 +17,14 @@ import {
   getMovies,
   getSelectedCity,
   setSelectedCity,
-  getMyBookings,
-  getShowDetails,
-  createPendingBooking,
+  fetchMoviesFromApi,
+  fetchTheatresFromApi,
+  fetchScreensFromApi,
+  fetchShowDetailsFromApi,
+  reserveSeatsOnBackend,
+  fetchMyBookingsFromApi,
 } from "../../services/customerBookingService";
+import { useAuth } from "../../auth/AuthContext";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 import {
   Sparkles,
@@ -32,6 +36,9 @@ import {
   CalendarDays,
   SlidersHorizontal,
   ChevronDown,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
 const GENRES = [
@@ -50,11 +57,7 @@ const LANGUAGES = ["ALL", "English", "Hindi", "Telugu", "Tamil"];
 const FORMATS = ["ALL", "IMAX 2D", "IMAX 3D", "4DX", "2D", "3D"];
 
 export default function CustomerDashboard() {
-  // Storage initialization
-  useEffect(() => {
-    initializeStorage();
-  }, []);
-
+  const { user } = useAuth();
   const [currentCity, setCurrentCity] = useState(() => getSelectedCity());
   const [showCityModal, setShowCityModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +67,33 @@ export default function CustomerDashboard() {
   const [selectedFormat, setSelectedFormat] = useState("ALL");
   const [sortBy, setSortBy] = useState("popular"); // "popular" | "rating" | "latest"
   const [bookingsList, setBookingsList] = useState([]);
+  const [rawMovieList, setRawMovieList] = useState([]);
+  const [isLoadingMovies, setIsLoadingMovies] = useState(true);
+  const [movieFetchError, setMovieFetchError] = useState(null);
+
+  // Storage and Backend synchronization
+  const loadBackendData = async () => {
+    setIsLoadingMovies(true);
+    setMovieFetchError(null);
+    try {
+      initializeStorage();
+      const [movies] = await Promise.all([
+        fetchMoviesFromApi(),
+        fetchTheatresFromApi(),
+        fetchScreensFromApi(),
+      ]);
+      setRawMovieList(movies || []);
+    } catch (err) {
+      console.error("Error loading backend cinema data:", err);
+      setMovieFetchError(err.message || "Failed to load movies from backend");
+    } finally {
+      setIsLoadingMovies(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBackendData();
+  }, []);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'detail' | 'showtimes' | 'seats' | 'fnb' | 'payment' | 'ticket' | 'my_bookings' | 'trailer' | null
@@ -75,14 +105,22 @@ export default function CustomerDashboard() {
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
   // Sync Bookings count
-  const refreshBookings = () => {
-    const b = getMyBookings();
-    setBookingsList(b);
+  const refreshBookings = async () => {
+    if (!user) {
+      setBookingsList([]);
+      return;
+    }
+    try {
+      const b = await fetchMyBookingsFromApi();
+      setBookingsList(b || []);
+    } catch {
+      // Ignore background refresh failure
+    }
   };
 
   useEffect(() => {
     refreshBookings();
-  }, []);
+  }, [user]);
 
   // Update city preference
   const handleCityChange = (city) => {
@@ -108,7 +146,7 @@ export default function CustomerDashboard() {
     }
 
     return list;
-  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity]);
+  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity, rawMovieList]);
 
   // Featured movies for hero carousel
   const featuredMovies = useMemo(() => {
@@ -131,9 +169,9 @@ export default function CustomerDashboard() {
     setActiveModal("trailer");
   };
 
-  const handleSelectShow = (show) => {
-    const details = getShowDetails(show.id);
+  const handleSelectShow = async (show) => {
     setActiveShow(show);
+    const details = await fetchShowDetailsFromApi(show.id);
     setActiveShowDetails(details);
     setActiveModal("seats");
   };
@@ -144,17 +182,36 @@ export default function CustomerDashboard() {
     setActiveModal("fnb");
   };
 
-  // From F&B -> to Payment Modal
-  const handleProceedToPaymentWithFnb = (fnbItems) => {
+  // From F&B -> to Payment Modal (Authoritative Backend Reservation)
+  const handleProceedToPaymentWithFnb = async (fnbItems) => {
     try {
       if (!pendingSeatSelection) return;
-      const { showId, seatIds } = pendingSeatSelection;
-      const newPendingBooking = createPendingBooking(showId, seatIds, fnbItems);
-      setPendingBooking(newPendingBooking);
+      const { showId, seatIds, showDetails } = pendingSeatSelection;
+
+      const reservedBooking = await reserveSeatsOnBackend(showId, seatIds, fnbItems);
+
+      // Attach visual display properties for payment and confirmation ticket
+      const completePendingBooking = {
+        ...reservedBooking,
+        movie_title: showDetails?.movie?.title || selectedMovie?.title || "Movie",
+        movie_poster: showDetails?.movie?.poster_url || selectedMovie?.poster_url || "",
+        movie_certificate: showDetails?.movie?.certificate || "U/A",
+        movie_language: showDetails?.show?.language || "English",
+        theatre_name: showDetails?.theatre?.name || "Cinema Hall",
+        theatre_city: showDetails?.theatre?.city || currentCity,
+        theatre_address: showDetails?.theatre?.address || "",
+        screen_name: showDetails?.screen?.name || "Audi 1",
+        screen_format: showDetails?.show?.format || showDetails?.screen?.format || "IMAX 2D",
+        show_time: showDetails?.show?.start_time || new Date().toISOString(),
+        fnb_items: fnbItems,
+      };
+
+      setPendingBooking(completePendingBooking);
       setActiveModal("payment");
     } catch (err) {
-      console.error("Booking creation error:", err);
-      alert(err.message || "Failed to create booking reservation.");
+      console.error("Booking reservation error:", err);
+      alert(err.message || "Failed to reserve seats. Some seats might have already been booked.");
+      setActiveModal("seats");
     }
   };
 
@@ -316,8 +373,28 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        {/* Movies Grid */}
-        {movies.length === 0 ? (
+        {/* Movies Grid / Loading / Error States */}
+        {isLoadingMovies ? (
+          <div className="catalog-empty-search-state" style={{ minHeight: "300px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <Loader2 size={40} className="auth-spin" style={{ color: "var(--crimson-500, #f84464)", marginBottom: "16px" }} />
+            <h3>Fetching Latest Movies...</h3>
+            <p>Connecting to cinema database servers</p>
+          </div>
+        ) : movieFetchError ? (
+          <div className="catalog-empty-search-state" style={{ borderColor: "#ef4444" }}>
+            <AlertCircle size={44} style={{ color: "#ef4444", marginBottom: "12px" }} />
+            <h3>Unable to load movies</h3>
+            <p>{movieFetchError}</p>
+            <button
+              type="button"
+              className="btn-reset-filters"
+              onClick={loadBackendData}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+            >
+              <RefreshCw size={16} /> Retry Connection
+            </button>
+          </div>
+        ) : movies.length === 0 ? (
           <div className="catalog-empty-search-state">
             <Film size={48} className="empty-icon" />
             <h3>No movies found</h3>

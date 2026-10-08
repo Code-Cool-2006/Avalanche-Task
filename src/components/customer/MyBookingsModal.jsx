@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import QRCode from "qrcode";
 import {
   X,
@@ -11,29 +11,48 @@ import {
   CheckCircle,
   XCircle,
   Trash2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
-import { getMyBookings, cancelBooking } from "../../services/customerBookingService";
+import {
+  fetchMyBookingsFromApi,
+  cancelBookingOnBackend,
+} from "../../services/customerBookingService";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function MyBookingsModal({
   onClose,
   onOpenTicketPass,
   onBookingCancelled,
 }) {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [filter, setFilter] = useState("ALL"); // "ALL" | "CONFIRMED" | "CANCELLED"
   const [selectedBookingForQr, setSelectedBookingForQr] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [feedbackMsg, setFeedbackMsg] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  const refreshBookings = () => {
-    const list = getMyBookings();
-    setBookings(list);
-  };
+  const refreshBookings = useCallback(async () => {
+    setIsLoadingBookings(true);
+    setFetchError("");
+    try {
+      const list = await fetchMyBookingsFromApi();
+      setBookings(list || []);
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setFetchError(err.message || "Failed to load bookings from server");
+    } finally {
+      setIsLoadingBookings(false);
+    }
+  }, []);
 
   useEffect(() => {
     refreshBookings();
-  }, []);
+  }, [refreshBookings]);
 
   const handleShowQr = (b) => {
     setSelectedBookingForQr(b);
@@ -44,16 +63,19 @@ export default function MyBookingsModal({
     }
   };
 
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
+    setIsCancelling(true);
     try {
-      cancelBooking(bookingId);
+      await cancelBookingOnBackend(bookingId);
       setConfirmCancelId(null);
       setFeedbackMsg("Booking cancelled successfully. Reserved seats have been freed.");
-      refreshBookings();
+      await refreshBookings();
       if (onBookingCancelled) onBookingCancelled();
       setTimeout(() => setFeedbackMsg(""), 4000);
     } catch (err) {
-      setFeedbackMsg(err.message || "Failed to cancel booking.");
+      setFeedbackMsg(err.message || "Failed to cancel booking on backend.");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -111,7 +133,27 @@ export default function MyBookingsModal({
 
         {/* Bookings List */}
         <div className="bookings-scroll-area">
-          {filteredBookings.length === 0 ? (
+          {isLoadingBookings ? (
+            <div className="no-bookings-empty-state" style={{ minHeight: "220px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <Loader2 size={36} className="auth-spin" style={{ color: "var(--cyan-400, #38bdf8)", marginBottom: "12px" }} />
+              <h3>Loading Your Bookings...</h3>
+              <p>Fetching active tickets and reservation history</p>
+            </div>
+          ) : fetchError ? (
+            <div className="no-bookings-empty-state" style={{ borderColor: "#ef4444" }}>
+              <AlertTriangle size={40} style={{ color: "#ef4444", marginBottom: "12px" }} />
+              <h3>Unable to load bookings</h3>
+              <p>{fetchError}</p>
+              <button
+                type="button"
+                className="btn-reset-filters"
+                onClick={refreshBookings}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+              >
+                <RefreshCw size={15} /> Retry
+              </button>
+            </div>
+          ) : filteredBookings.length === 0 ? (
             <div className="no-bookings-empty-state">
               <Ticket size={48} className="empty-icon" />
               <h3>No bookings found</h3>

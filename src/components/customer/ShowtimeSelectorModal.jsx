@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   X,
   Calendar,
@@ -12,8 +12,14 @@ import {
   ShieldCheck,
   Utensils,
   Smartphone,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
-import { getShowsForMovie, getTheatres } from "../../services/customerBookingService";
+import {
+  fetchShowsForMovieFromApi,
+  getTheatres,
+} from "../../services/customerBookingService";
 
 const TIME_FILTERS = [
   { id: "ALL", label: "All Timings" },
@@ -58,6 +64,29 @@ export default function ShowtimeSelectorModal({
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("ALL");
   const [selectedFormatFilter, setSelectedFormatFilter] = useState("ALL");
   const [favTheatres, setFavTheatres] = useState({});
+  const [rawGroupedShows, setRawGroupedShows] = useState([]);
+  const [isLoadingShows, setIsLoadingShows] = useState(true);
+  const [showsError, setShowsError] = useState(null);
+
+  // Fetch real showtimes from backend
+  const loadShows = useCallback(async () => {
+    if (!movie?.id) return;
+    setIsLoadingShows(true);
+    setShowsError(null);
+    try {
+      const data = await fetchShowsForMovieFromApi(movie.id, selectedCity, selectedDate);
+      setRawGroupedShows(data || []);
+    } catch (err) {
+      console.error("Error fetching showtimes:", err);
+      setShowsError(err.message || "Failed to load showtimes");
+    } finally {
+      setIsLoadingShows(false);
+    }
+  }, [movie?.id, selectedCity, selectedDate]);
+
+  useEffect(() => {
+    loadShows();
+  }, [loadShows]);
 
   // Toggle favorite theatre
   const toggleFav = (theatreId) => {
@@ -69,11 +98,10 @@ export default function ShowtimeSelectorModal({
 
   // Retrieve shows grouped by theatre for selected movie, city, and date
   const groupedTheatresWithShows = useMemo(() => {
-    if (!movie) return [];
-    const baseGrouped = getShowsForMovie(movie.id, selectedCity, selectedDate);
+    if (!rawGroupedShows) return [];
 
     // Apply Time Filter & Format Filter
-    return baseGrouped
+    return rawGroupedShows
       .map((item) => {
         const filteredShows = item.shows.filter((show) => {
           const showDate = new Date(show.start_time);
@@ -89,7 +117,7 @@ export default function ShowtimeSelectorModal({
 
           // Format filter check
           if (selectedFormatFilter !== "ALL") {
-            if (show.screen?.format !== selectedFormatFilter) {
+            if (show.screen?.format !== selectedFormatFilter && show.format !== selectedFormatFilter) {
               return false;
             }
           }
@@ -103,19 +131,19 @@ export default function ShowtimeSelectorModal({
         };
       })
       .filter((item) => item.shows.length > 0);
-  }, [movie, selectedCity, selectedDate, selectedTimeFilter, selectedFormatFilter]);
+  }, [rawGroupedShows, selectedTimeFilter, selectedFormatFilter]);
 
   // Extract available formats for filter pills
   const availableFormats = useMemo(() => {
     const set = new Set();
-    const baseGrouped = getShowsForMovie(movie?.id, selectedCity, selectedDate);
-    baseGrouped.forEach((g) => {
+    rawGroupedShows.forEach((g) => {
       g.shows.forEach((s) => {
         if (s.screen?.format) set.add(s.screen.format);
+        else if (s.format) set.add(s.format);
       });
     });
     return ["ALL", ...Array.from(set)];
-  }, [movie, selectedCity, selectedDate]);
+  }, [rawGroupedShows]);
 
   return (
     <div className="showtimes-modal-backdrop" onClick={onClose}>
@@ -237,7 +265,27 @@ export default function ShowtimeSelectorModal({
 
         {/* Theatres & Showtimes List */}
         <div className="showtimes-theatres-list">
-          {groupedTheatresWithShows.length === 0 ? (
+          {isLoadingShows ? (
+            <div className="no-shows-found-state" style={{ minHeight: "220px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+              <Loader2 size={36} className="auth-spin" style={{ color: "var(--crimson-500, #f84464)", marginBottom: "12px" }} />
+              <h3>Checking Showtimes...</h3>
+              <p>Fetching scheduled screenings from cinema multiplex servers</p>
+            </div>
+          ) : showsError ? (
+            <div className="no-shows-found-state" style={{ borderColor: "#ef4444" }}>
+              <AlertCircle size={40} style={{ color: "#ef4444", marginBottom: "12px" }} />
+              <h3>Unable to load showtimes</h3>
+              <p>{showsError}</p>
+              <button
+                type="button"
+                className="btn-reset-filters"
+                onClick={loadShows}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+              >
+                <RefreshCw size={15} /> Retry
+              </button>
+            </div>
+          ) : groupedTheatresWithShows.length === 0 ? (
             <div className="no-shows-found-state">
               <Film size={44} className="empty-icon" />
               <h3>No showtimes available</h3>

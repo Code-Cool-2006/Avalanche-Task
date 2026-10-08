@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   UtensilsCrossed,
@@ -7,10 +7,14 @@ import {
   Sparkles,
   ChevronRight,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
-import { FOOD_AND_BEVERAGES } from "../../data/mockCinemaData";
+import {
+  fetchConcessionsFromApi,
+  getFoodAndBeverages,
+} from "../../services/customerBookingService";
 
-const CATEGORIES = ["ALL", "Combos", "Popcorn", "Snacks", "Beverages"];
+const CATEGORIES = ["ALL", "Combos", "Popcorn", "Snacks", "Beverages", "Desserts"];
 
 export default function FoodAndBeverageModal({
   pendingBookingData,
@@ -20,6 +24,29 @@ export default function FoodAndBeverageModal({
 }) {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [cart, setCart] = useState({}); // { [itemId]: quantity }
+  const [fnbList, setFnbList] = useState([]);
+  const [isLoadingFnb, setIsLoadingFnb] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchConcessionsFromApi()
+      .then((items) => {
+        if (isMounted) {
+          setFnbList(items || []);
+          setIsLoadingFnb(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading concessions:", err);
+        if (isMounted) {
+          setFnbList(getFoodAndBeverages());
+          setIsLoadingFnb(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleAdd = (item) => {
     setCart((prev) => ({
@@ -43,15 +70,15 @@ export default function FoodAndBeverageModal({
     });
   };
 
-  const filteredItems = FOOD_AND_BEVERAGES.filter((item) => {
+  const filteredItems = fnbList.filter((item) => {
     if (selectedCategory === "ALL") return true;
-    return item.category.toLowerCase() === selectedCategory.toLowerCase();
+    return item.category?.toLowerCase() === selectedCategory.toLowerCase();
   });
 
   // Calculate cart summary
   const cartItemList = Object.entries(cart)
     .map(([id, qty]) => {
-      const item = FOOD_AND_BEVERAGES.find((f) => f.id === id);
+      const item = fnbList.find((f) => String(f.id) === String(id));
       return item ? { ...item, quantity: qty } : null;
     })
     .filter(Boolean);

@@ -31,6 +31,11 @@ import movieRoutes from "./routes/movieRoutes.js";
 import theatreRoutes from "./routes/theatreRoutes.js";
 import screenRoutes from "./routes/screenRoutes.js";
 import seatRoutes from "./routes/seatRoutes.js";
+import showRoutes from "./routes/showRoutes.js";
+import concessionRoutes from "./routes/concessionRoutes.js";
+import createBookingRouter from "./routes/bookingRoutes.js";
+import createPaymentRouter from "./routes/paymentRoutes.js";
+import { initializeDatabase } from "./config/initDb.js";
 
 /* ----------------------------------------------------------------------------
  * 1. CONFIGURATION & CONSTANTS
@@ -57,54 +62,8 @@ if (!env.DATABASE_URL) throw new Error("DATABASE_URL required (see .env.example)
 pg.types.setTypeParser(20, Number); // Parse BIGINT timestamps into JavaScript Numbers
 const pool = new pg.Pool({ connectionString: env.DATABASE_URL, max: 10 });
 
-// Ensure security & auth tables exist
-await pool.query(`
--- Extends the booking schema's existing users table
-CREATE TABLE IF NOT EXISTS users(
-  id SERIAL PRIMARY KEY, 
-  name VARCHAR NOT NULL, 
-  email VARCHAR UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL, 
-  role VARCHAR DEFAULT 'user'
-);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS verified INTEGER DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS fails INTEGER DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until BIGINT DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS created BIGINT DEFAULT 0;
-
--- OTP verification table (hashes OTPs with HMAC-SHA256)
-CREATE TABLE IF NOT EXISTS otps(
-  email TEXT, 
-  purpose TEXT, 
-  hash TEXT NOT NULL, 
-  expires BIGINT NOT NULL,
-  tries INTEGER DEFAULT 0, 
-  sent BIGINT NOT NULL, 
-  PRIMARY KEY(email, purpose)
-);
-
--- Sessions table for refresh tokens and multi-device revocation
-CREATE TABLE IF NOT EXISTS sessions(
-  id SERIAL PRIMARY KEY, 
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash TEXT UNIQUE NOT NULL, 
-  expires BIGINT NOT NULL, 
-  revoked INTEGER DEFAULT 0,
-  ip TEXT, 
-  ua TEXT, 
-  created BIGINT NOT NULL
-);
-
--- Security audit trail table
-CREATE TABLE IF NOT EXISTS audit(
-  ts BIGINT, 
-  event TEXT, 
-  email TEXT, 
-  ip TEXT, 
-  detail TEXT
-);
-`);
+// Ensure security, auth, cinema, shows, seats, bookings, and concessions tables exist
+await initializeDatabase(pool);
 
 // PostgreSQL Query Helpers with standard parameterized conversion
 const pgSql = (sql) => { let i = 0; return sql.replace(/\?/g, () => `$${++i}`); };
@@ -433,16 +392,28 @@ auth.get("/me", requireAuth, (req, res) => res.json({ user: publicUser(req.user)
 app.use("/api/auth", auth);
 
 /* ----------------------------------------------------------------------------
- * 9. CINEMA & BOOKING CRUD APIS (Movies, Theatres, Screens)
+ * 9. CINEMA & BOOKING CRUD APIS (Movies, Theatres, Screens, Shows, Bookings, Concessions, Payments)
  * ---------------------------------------------------------------------------- */
+const bookingRouter = createBookingRouter(requireAuth);
+const paymentRouter = createPaymentRouter(requireAuth);
+
 app.use("/api", movieRoutes);
 app.use("/api", theatreRoutes);
 app.use("/api", screenRoutes);
 app.use("/api", seatRoutes);
+app.use("/api", showRoutes);
+app.use("/api", concessionRoutes);
+app.use("/api", bookingRouter);
+app.use("/api", paymentRouter);
+
 app.use("/", movieRoutes);
 app.use("/", theatreRoutes);
 app.use("/", screenRoutes);
 app.use("/", seatRoutes);
+app.use("/", showRoutes);
+app.use("/", concessionRoutes);
+app.use("/", bookingRouter);
+app.use("/", paymentRouter);
 
 // Root Health Check
 app.get("/", (_req, res) => res.json({ message: "Movie Booking & Auth Backend is running!" }));

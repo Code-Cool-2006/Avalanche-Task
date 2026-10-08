@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   CreditCard,
@@ -15,11 +15,14 @@ import {
   Tag,
   QrCode,
   Building,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import {
-  confirmBookingAndPay,
+  confirmBookingOnBackend,
   applyPromoCode,
 } from "../../services/customerBookingService";
+import { useAuth } from "../../auth/AuthContext";
 import { PROMO_CODES } from "../../data/mockCinemaData";
 
 export default function PaymentModal({
@@ -28,12 +31,13 @@ export default function PaymentModal({
   onPaymentSuccess,
   onClose,
 }) {
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("upi"); // "upi" | "card" | "netbanking"
   const [upiOption, setUpiOption] = useState("gpay"); // "gpay" | "phonepe" | "paytm" | "qr"
   const [cardNumber, setCardNumber] = useState("4532 •••• •••• 8892");
   const [cardExpiry, setCardExpiry] = useState("08/29");
   const [cardCvv, setCardCvv] = useState("482");
-  const [cardholderName, setCardholderName] = useState("Alex Mercer");
+  const [cardholderName, setCardholderName] = useState(user?.name || "Cardholder Name");
 
   // Promo code state
   const [promoInput, setPromoInput] = useState("");
@@ -46,9 +50,37 @@ export default function PaymentModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  // Base amounts from pending booking
+  // Lock timer calculated from backend locked_until
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (pendingBooking?.locked_until) {
+      const exp = new Date(pendingBooking.locked_until).getTime();
+      return Math.max(0, Math.floor((exp - Date.now()) / 1000));
+    }
+    return 300;
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setError("Your 5-minute seat hold lock has expired. Please select your seats again.");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Base amounts from server-calculated pending booking
   const ticketSubtotal = pendingBooking.subtotal || 0;
-  const fnbSubtotal = pendingBooking.fnb_subtotal || 0;
+  const fnbSubtotal = pendingBooking.food_total || pendingBooking.fnb_subtotal || 0;
   const convenienceFee = pendingBooking.convenience_fee || 0;
 
   const currentDiscount = appliedPromo?.discount || 0;
@@ -81,34 +113,47 @@ export default function PaymentModal({
     setPromoError("");
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
+    if (timeLeft <= 0) {
+      setError("Your seat lock has expired. Please return to seat selection.");
+      return;
+    }
+
     setIsProcessing(true);
     setError("");
 
-    setTimeout(() => {
-      try {
-        let paymentDesc = "Credit Card (ending in 8892)";
-        if (paymentMethod === "upi") {
-          paymentDesc =
-            upiOption === "qr"
-              ? "UPI Instant QR Scan"
-              : upiOption === "gpay"
-              ? "Google Pay UPI"
-              : upiOption === "phonepe"
-              ? "PhonePe UPI"
-              : "Paytm UPI";
-        } else if (paymentMethod === "netbanking") {
-          paymentDesc = "Net Banking (HDFC Bank)";
-        }
-
-        const confirmedBooking = confirmBookingAndPay(pendingBooking.id, paymentDesc);
-        setIsProcessing(false);
-        onPaymentSuccess(confirmedBooking);
-      } catch (err) {
-        setIsProcessing(false);
-        setError(err.message || "Payment authorization failed.");
+    try {
+      let paymentDesc = "Credit Card (ending in 8892)";
+      if (paymentMethod === "upi") {
+        paymentDesc =
+          upiOption === "qr"
+            ? "UPI Instant QR Scan"
+            : upiOption === "gpay"
+            ? "Google Pay UPI"
+            : upiOption === "phonepe"
+            ? "PhonePe UPI"
+            : "Paytm UPI";
+      } else if (paymentMethod === "netbanking") {
+        paymentDesc = "Net Banking (HDFC Bank)";
       }
-    }, 1300);
+
+      const confirmedBooking = await confirmBookingOnBackend(pendingBooking.id, paymentDesc);
+
+      // Merge visual details for ticket rendering
+      const enrichedConfirmed = {
+        ...pendingBooking,
+        ...confirmedBooking,
+        ticket_code: confirmedBooking.ticket_code || confirmedBooking.ticket?.ticket_number || pendingBooking.booking_code,
+        status: "CONFIRMED",
+        payment_method: paymentDesc,
+      };
+
+      setIsProcessing(false);
+      onPaymentSuccess(enrichedConfirmed);
+    } catch (err) {
+      setIsProcessing(false);
+      setError(err.message || "Payment confirmation failed on backend. Please check seat availability.");
+    }
   };
 
   const showDateFormatted = pendingBooking.show_time
@@ -144,18 +189,35 @@ export default function PaymentModal({
             </button>
             <h2>Checkout & Payment</h2>
           </div>
-          <button
-            type="button"
-            className="btn-modal-close"
-            onClick={onClose}
-            disabled={isProcessing}
-            aria-label="Close Checkout"
-          >
-            <X size={20} />
-          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Seat Lock Countdown */}
+            <div className={`countdown-timer-badge ${timeLeft < 60 ? "urgent" : ""}`} style={{ margin: 0 }}>
+              <Clock size={15} className="timer-icon" />
+              <div className="timer-text">
+                <span className="timer-label">Hold Expires:</span>
+                <span className="timer-digits">{formatTimer(timeLeft)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn-modal-close"
+              onClick={onClose}
+              disabled={isProcessing}
+              aria-label="Close Checkout"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        {error && <div className="payment-error-alert">{error}</div>}
+        {error && (
+          <div className="payment-error-alert" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
 
         <div className="payment-modal-body">
           {/* Left Column: Order Review */}
