@@ -1,16 +1,19 @@
-const express = require("express");
+import express from "express";
+import {
+  getAllTheatres,
+  getTheatreById,
+  createTheatre,
+  updateTheatre,
+  deleteTheatre,
+} from "../controllers/theatreController.js";
 
 const router = express.Router();
 
-const {
-    getAllTheatres, getTheatreById, createTheatre, updateTheatre, deleteTheatre
-} = require("../controllers/theatreController.js");
-
-//THEATRES
+// THEATRES
 router.get("/theatres", getAllTheatres);
 router.get("/theatres/:id", getTheatreById);
 router.post("/theatres/create", createTheatre);
 router.put("/theatres/update/:id", updateTheatre);
 router.delete("/theatres/delete/:id", deleteTheatre);
 
-module.exports = router;
+export default router;

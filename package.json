@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "node --env-file-if-exists=.env server/index.js",
+    "server": "node --env-file-if-exists=.env backend/index.js",
+    "backend": "node --env-file-if-exists=.env backend/index.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

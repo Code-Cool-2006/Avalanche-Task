@@ -5,7 +5,7 @@ import pg from "pg";
 process.loadEnvFile(".env");
 
 const PORT = 4555, B = `http://localhost:${PORT}/api/auth`;
-const srv = spawn("node", ["server/index.js"], { env: { ...process.env, PORT, SMTP_HOST: "" } });
+const srv = spawn("node", ["backend/index.js"], { env: { ...process.env, PORT, SMTP_HOST: "" } });
 let out = "";
 srv.stdout.on("data", (d) => (out += d));
 srv.stderr.on("data", (d) => /warn/i.test(d) || process.stderr.write(d));
