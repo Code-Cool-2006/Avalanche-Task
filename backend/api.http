@@ -81,7 +81,8 @@ DELETE http://localhost:5000/theatres/delete/99
 GET http://localhost:5000/screens
 
 
-### GET SCREEN BY ID
+### GET  SCREEN BY ID
+
 GET http://localhost:5000/screens/1
 
 
@@ -105,3 +106,31 @@ Content-Type: application/json
 
 ### DELETE SCREEN
 DELETE http://localhost:5000/screens/delete/1
+
+
+### GET SEATS FOR SCREEN
+GET http://localhost:5000/screens/2/seats
+
+### CREATE SEAT
+POST http://localhost:5000/screens/2/seats/create
+Content-Type: application/json
+
+{
+    "row_label": "A",
+    "seat_number": 1,
+    "tier": "regular"
+}
+
+
+### UPDATE SEAT
+PUT http://localhost:5000/seats/update/1
+Content-Type: application/json
+
+{
+    "row_label": "A",
+    "seat_number": 1,
+    "tier": "premium"
+}
+
+### DELETE SEAT
+DELETE http://localhost:5000/seats/delete/1

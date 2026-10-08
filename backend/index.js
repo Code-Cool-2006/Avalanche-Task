@@ -30,6 +30,7 @@ import pg from "pg";
 import movieRoutes from "./routes/movieRoutes.js";
 import theatreRoutes from "./routes/theatreRoutes.js";
 import screenRoutes from "./routes/screenRoutes.js";
+import seatRoutes from "./routes/seatRoutes.js";
 
 /* ----------------------------------------------------------------------------
  * 1. CONFIGURATION & CONSTANTS
@@ -437,9 +438,11 @@ app.use("/api/auth", auth);
 app.use("/api", movieRoutes);
 app.use("/api", theatreRoutes);
 app.use("/api", screenRoutes);
+app.use("/api", seatRoutes);
 app.use("/", movieRoutes);
 app.use("/", theatreRoutes);
 app.use("/", screenRoutes);
+app.use("/", seatRoutes);
 
 // Root Health Check
 app.get("/", (_req, res) => res.json({ message: "Movie Booking & Auth Backend is running!" }));
