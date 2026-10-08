@@ -1,4 +1,4 @@
-import { generateTheatreLayout } from '../utils/generateSeatPositions';
+import { generateTheatreLayout } from '../services/generateSeatPositions';
 
 export const IMAX_01 = generateTheatreLayout({
   screen: { width: 32, height: 14, distance: 20, radius: 50 },

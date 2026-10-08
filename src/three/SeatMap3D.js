@@ -81,6 +81,8 @@ export class SeatMap3D {
     this.buildAuditoriumEnvironment();
 
     // 6. Seats
+    this.seatsRootGroup = new THREE.Group();
+    this.scene.add(this.seatsRootGroup);
     this.buildSeats();
 
     // 7. Event listeners
@@ -205,10 +207,14 @@ export class SeatMap3D {
   buildSeats() {
     this.seatList = [];
     this.seatMap.clear();
-
-    // Clean old seat meshes if any
-    this.seatMeshes.forEach((mesh) => this.scene.remove(mesh));
     this.seatMeshes = [];
+
+    if (!this.seatsRootGroup) {
+      this.seatsRootGroup = new THREE.Group();
+      this.scene.add(this.seatsRootGroup);
+    } else {
+      this.seatsRootGroup.clear();
+    }
 
     if (!this.rows || this.rows.length === 0) return;
 
@@ -243,7 +249,7 @@ export class SeatMap3D {
       });
       const riser = new THREE.Mesh(riserGeo, riserMat);
       riser.position.set(0, rowElevation - 0.11, rowZ);
-      this.scene.add(riser);
+      this.seatsRootGroup.add(riser);
 
       // Row curve factor (gentle wrap around the screen)
       const curveIntensity = 0.025;
@@ -300,7 +306,11 @@ export class SeatMap3D {
 
         // Invisible Bounding Box for Raycasting clicks & hover detection
         const hitBoxGeo = new THREE.BoxGeometry(0.85, 1.0, 0.8);
-        const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
+        const hitBoxMat = new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        });
         const hitBox = new THREE.Mesh(hitBoxGeo, hitBoxMat);
         hitBox.position.set(0, 0.45, 0);
         hitBox.userData = {
@@ -311,7 +321,7 @@ export class SeatMap3D {
         };
         seatGroup.add(hitBox);
 
-        this.scene.add(seatGroup);
+        this.seatsRootGroup.add(seatGroup);
 
         // Register seat
         const seatRecord = {

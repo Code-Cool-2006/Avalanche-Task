@@ -5,9 +5,11 @@ import { Eye, RotateCcw, Sparkles, Info } from "lucide-react";
 export default function SeatMap3DView({
   rows,
   selectedIds,
+  selectedSeatIds,
   onToggleSeat,
   lastSelectedSeatId,
 }) {
+  const activeSelected = selectedIds || selectedSeatIds || [];
   const containerRef = useRef(null);
   const seatMap3DRef = useRef(null);
   const [tooltip, setTooltip] = useState({ visible: false, seat: null, x: 0, y: 0 });
@@ -18,7 +20,7 @@ export default function SeatMap3DView({
 
     const map = new SeatMap3D(containerRef.current, {
       rows,
-      selectedIds,
+      selectedIds: activeSelected,
       onToggle: (seatId) => {
         onToggleSeat(seatId);
       },
@@ -38,9 +40,9 @@ export default function SeatMap3DView({
   // Update selected seats
   useEffect(() => {
     if (seatMap3DRef.current) {
-      seatMap3DRef.current.setSelected(selectedIds);
+      seatMap3DRef.current.setSelected(activeSelected);
     }
-  }, [selectedIds]);
+  }, [activeSelected]);
 
   // Update rows if data refreshed
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function SeatMap3DView({
 
   const handleViewFromSeat = () => {
     if (!seatMap3DRef.current) return;
-    const targetSeatId = lastSelectedSeatId || Array.from(selectedIds)[0];
+    const targetSeatId = lastSelectedSeatId || Array.from(activeSelected)[0];
     if (targetSeatId) {
       seatMap3DRef.current.viewFromSeat(targetSeatId);
       setIsSeatViewActive(true);
@@ -78,14 +80,20 @@ export default function SeatMap3DView({
         </div>
 
         <div className="control-actions">
-          {selectedIds.length > 0 && !isSeatViewActive && (
+          {activeSelected.length > 0 && !isSeatViewActive && (
             <button
               className="btn-3d-action btn-seat-view"
               onClick={handleViewFromSeat}
               title="Fly camera to your chosen seat and check the sightline toward the screen"
             >
               <Eye size={15} />
-              <span>View from Seat {lastSelectedSeatId ? lastSelectedSeatId.split("-").slice(1).join("-") : ""}</span>
+              <span>
+                View from Seat{" "}
+                {(lastSelectedSeatId || activeSelected[0] || "")
+                  .split("-")
+                  .slice(1)
+                  .join("-")}
+              </span>
             </button>
           )}
 
