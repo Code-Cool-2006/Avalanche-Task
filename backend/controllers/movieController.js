@@ -7,11 +7,11 @@ const getAllMovies = async (req, res) => {
             "SELECT * FROM movies ORDER BY release_date DESC"
         );
 
-        res.json(result.rows);
+        return res.json(result.rows);
     } catch (error) {
         console.error("Error fetching movies:", error.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Failed to fetch movies"
         });
     }
@@ -31,7 +31,7 @@ const getMovieById = async(req, res)=>{
             return res.status(404).json({message: "Movie not found"});
         }
 
-        res.json(result.rows[0]);
+        return res.json(result.rows[0]);
     }catch(error){
 
         console.error("Error fetching movie by ID:", error.message);
@@ -70,7 +70,7 @@ const createMovie = async (req, res) => {
         );
 
 
-        res.status(201).json(result.rows[0]);
+        return res.status(201).json(result.rows[0]);
 
     }catch(error){
         console.error("Error Creating Movie:", error.message);
@@ -112,7 +112,7 @@ const updateMovie = async (req, res) => {
             return res.status(404).json({ message: "Movie not found" });
         }
 
-        res.json(result.rows[0]);
+        return res.json(result.rows[0]);
 
     }catch(error){
         console.error("Error Updating Movie:", error.message);
@@ -136,7 +136,7 @@ const deleteMovie = async (req, res) => {
             return res.status(404).json({ message: "Movie not found" });
         }
 
-        res.json({ message: "Movie deleted successfully", movie: result.rows[0] });
+        return res.json({ message: "Movie deleted successfully", movie: result.rows[0] });
 
     }catch(error){
         console.error("Error Deleting Movie:", error.message);

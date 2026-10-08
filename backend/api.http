@@ -3,7 +3,7 @@ GET http://localhost:5000/movies
 
 
 ### GET MOVIE BY ID
-GET http://localhost:5000/movies/1
+GET http://localhost:5000/movies/2
 
 
 
@@ -26,7 +26,7 @@ Content-Type: application/json
 
 
 ### UPDATE MOVIE
-PUT http://localhost:5000/movies/update/2
+PUT http://localhost:5000/movies/update/4
 Content-Type: application/json
 
 {
@@ -42,4 +42,36 @@ Content-Type: application/json
 }
 
 ### DELETE MOVIE
-DELETE http://localhost:5000/movies/delete/2
+DELETE http://localhost:5000/movies/delete/4
+
+
+
+### GET ALL THEATRES
+GET http://localhost:5000/theatres
+
+### GET THEATRE BY ID
+GET http://localhost:5000/theatres/1
+
+
+### CREATE THEATRE
+POST http://localhost:5000/theatres/create
+Content-Type: application/json
+
+{
+    "name": "Miraj Cinemas",
+    "city": "Belagavi",
+    "address": "College Road, Belagavi"
+}
+
+### UPDATE THEATRE
+PUT http://localhost:5000/theatres/update/1
+Content-Type: application/json
+
+{
+    "name": "PVR Cinemas Updated",
+    "city": "Belagavi",
+    "address": "New Address, Belagavi"
+}
+
+### DELETE THEATRE
+DELETE http://localhost:5000/theatres/delete/99
