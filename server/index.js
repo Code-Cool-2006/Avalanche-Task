@@ -10,6 +10,9 @@ import { z } from "zod";
 import crypto from "node:crypto";
 import { promisify } from "node:util";
 import pg from "pg";
+import movieRoutes from "./routes/movieRoutes.js";
+import theatreRoutes from "./routes/theatreRoutes.js";
+import screenRoutes from "./routes/screenRoutes.js";
 
 const env = process.env;
 const PROD = env.NODE_ENV === "production";
@@ -176,11 +179,15 @@ app.use(cors({ origin: ORIGIN, credentials: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 // CSRF: SameSite=Strict cookies + CORS allow-list + required custom header (not sendable cross-site without preflight)
-app.use((req, res, next) =>
-  req.method !== "GET" && req.get("x-requested-with") !== "fetch"
-    ? res.status(403).json({ error: "Forbidden" })
-    : next()
-);
+// Exclude public resource routes or verify origin
+app.use((req, res, next) => {
+  if (req.method === "GET") return next();
+  const isAuthOrApi = req.path.startsWith("/api/auth");
+  if (isAuthOrApi && req.get("x-requested-with") !== "fetch") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  next();
+});
 const limiter = (max, windowMin = 15) =>
   rateLimit({ windowMs: windowMin * 60_000, limit: max, standardHeaders: true, legacyHeaders: false,
     message: { error: "Too many attempts. Try again later." } });
@@ -298,6 +305,16 @@ auth.post("/reset", limiter(10), parse("reset"), async (req, res) => {
 auth.get("/me", requireAuth, (req, res) => res.json({ user: publicUser(req.user) }));
 
 app.use("/api/auth", auth);
+
+// Cinema & Booking CRUD APIs (Both root and /api prefixed for convenience)
+app.use("/api", movieRoutes);
+app.use("/api", theatreRoutes);
+app.use("/api", screenRoutes);
+app.use("/", movieRoutes);
+app.use("/", theatreRoutes);
+app.use("/", screenRoutes);
+
+app.get("/", (_req, res) => res.json({ message: "Movie Booking & Auth Backend is running!" }));
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
 app.use((err, _req, res, _next) => {
   console.error(err);

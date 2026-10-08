@@ -1,0 +1,107 @@
+### GET ALL MOVIES
+GET http://localhost:5000/movies
+
+
+### GET MOVIE BY ID
+GET http://localhost:5000/movies/2
+
+
+
+### CREATE MOVIE
+POST http://localhost:5000/movies/create
+Content-Type: application/json
+
+
+{
+    "title": "Inception",
+    "description": "A thief enters the dreams of others to steal secrets.",
+    "genre": "Sci-Fi",
+    "language": "English",
+    "duration_min": 148,
+    "rating": 5,
+    "poster_url": "https://static1.srcdn.com/wordpress/wp-content/uploads/2020/01/Inception-Movie-Poster.jpg",
+    "trailer_url": "https://www.bing.com/videos/riverview/relatedvideo?q=inception&&mid=594F8B54EBE4BB4C9687594F8B54EBE4BB4C9687&churl=https%3a%2f%2fwww.youtube.com%2fchannel%2fUCTCjFFoX1un-j7ni4B6HJ3Q&FORM=VRDGAR",
+    "release_date": "2010-07-16"
+}
+
+
+### UPDATE MOVIE
+PUT http://localhost:5000/movies/update/4
+Content-Type: application/json
+
+{
+    "title": "Inception Updated",
+    "description": "A skilled thief enters people's dreams to steal valuable secrets.",
+    "genre": "Sci-Fi",
+    "language": "English",
+    "duration_min": 148,
+    "rating": 5,
+    "poster_url": "https://example.com/inception-new.jpg",
+    "trailer_url": "https://example.com/inception-trailer",
+    "release_date": "2010-07-16"
+}
+
+### DELETE MOVIE
+DELETE http://localhost:5000/movies/delete/4
+
+
+
+### GET ALL THEATRES
+GET http://localhost:5000/theatres
+
+### GET THEATRE BY ID
+GET http://localhost:5000/theatres/1
+
+
+### CREATE THEATRE
+POST http://localhost:5000/theatres/create
+Content-Type: application/json
+
+{
+    "name": "Miraj Cinemas",
+    "city": "Belagavi",
+    "address": "College Road, Belagavi"
+}
+
+### UPDATE THEATRE
+PUT http://localhost:5000/theatres/update/1
+Content-Type: application/json
+
+{
+    "name": "PVR Cinemas Updated",
+    "city": "Belagavi",
+    "address": "New Address, Belagavi"
+}
+
+### DELETE THEATRE
+DELETE http://localhost:5000/theatres/delete/99
+
+
+### GET ALL SCREENS
+GET http://localhost:5000/screens
+
+
+### GET SCREEN BY ID
+GET http://localhost:5000/screens/1
+
+
+### CREATE SCREEN
+POST http://localhost:5000/screens/create
+Content-Type: application/json
+
+{
+    "theatre_id": 1,
+    "name": "Screen 1"
+}
+
+### UPDATE SCREEN
+PUT http://localhost:5000/screens/update/1
+Content-Type: application/json
+
+{
+    "theatre_id": 1,
+    "name": "Screen 1 Updated"
+}
+
+### DELETE SCREEN
+DELETE http://localhost:5000/screens/delete/1
