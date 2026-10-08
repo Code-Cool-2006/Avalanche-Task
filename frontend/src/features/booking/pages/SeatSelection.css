@@ -1,0 +1,390 @@
+.seat-selection-page {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #020202;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.seat-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 24px 32px;
+    background: linear-gradient(to bottom, rgba(2, 2, 2, 0.95) 0%, rgba(2, 2, 2, 0.6) 60%, transparent 100%);
+    pointer-events: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.seat-header > * {
+    pointer-events: auto;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.back-btn {
+    font-family: var(--font-mono, monospace);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    margin-bottom: 12px;
+}
+
+.back-btn:hover {
+    color: white;
+}
+
+.movie-title {
+    font-family: var(--font-display, sans-serif);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px 0;
+    color: white;
+}
+
+.screen-time {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.header-tips {
+    display: flex;
+    gap: 12px;
+}
+
+.tip-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.map-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.legend {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.available { background: #991111; }
+.dot.selected { 
+    background: #ff3333; 
+    box-shadow: 0 0 12px rgba(255, 51, 51, 0.5);
+}
+.dot.booked { background: #1a1a1a; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+.booking-actions {
+    display: flex;
+    align-items: center;
+}
+
+.booking-actions-active {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.selected-seats-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.seats-tag, .price-tag {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.seats-tag .label, .price-tag .label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.seats-tag .value, .price-tag .value {
+    font-size: 16px;
+    color: white;
+    font-weight: 600;
+}
+
+.divider-v {
+    width: 1px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.continue-btn {
+    height: 48px;
+    padding: 0 32px;
+    background: #ff3333;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.continue-btn:hover {
+    background: #ff4d4d;
+    transform: translateY(-1px);
+}
+
+.view-from-seat-btn {
+    height: 48px;
+    padding: 0 24px;
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-from-seat-btn:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.select-prompt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+}
+
+.prompt-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+.view-overlay {
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.view-pill {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: white;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: var(--font-mono, monospace);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-dot {
+    width: 8px;
+    height: 8px;
+    background: #ff3333;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 51, 51, 0.8);
+}
+
+.back-to-map-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.back-to-map-btn:hover {
+    color: white;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 1024px) {
+    .seat-header {
+        padding: 20px 24px;
+    }
+    .bottom-bar {
+        padding: 16px 24px;
+    }
+    .legend {
+        gap: 16px;
+    }
+    .header-tips {
+        display: none; /* Hide tips on smaller desktop/tablet to save space */
+    }
+}
+
+@media (max-width: 768px) {
+    .seat-header {
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .header-left {
+        width: 100%;
+        align-items: center;
+        text-align: center;
+    }
+
+    .back-btn {
+        position: absolute;
+        left: 16px;
+        top: 20px;
+        margin: 0;
+    }
+
+    .movie-title {
+        font-size: 20px;
+    }
+
+    .header-tips {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .tip-badge {
+        font-size: 9px;
+        padding: 4px 8px;
+    }
+
+    .bottom-bar {
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .legend {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 11px;
+    }
+
+    .booking-actions, .booking-actions-active {
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    
+    .selected-seats-info {
+        gap: 12px;
+    }
+    
+    .seats-tag .value, .price-tag .value {
+        font-size: 14px;
+    }
+
+    .continue-btn {
+        height: 44px;
+        padding: 0 20px;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .select-prompt {
+        width: 100%;
+        justify-content: center;
+        font-size: 13px;
+    }
+    
+    .divider-v {
+        height: 24px;
+    }
+}

@@ -1,0 +1,105 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg, #050505);
+  background-image: radial-gradient(circle at 50% 50%, rgba(229, 9, 20, 0.1) 0%, transparent 50%);
+  padding: 2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.glass-panel {
+  background: var(--glass-bg, rgba(18,18,18,0.72));
+  backdrop-filter: var(--glass-blur, blur(20px));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.06));
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+}
+
+.auth-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  color: #AAA;
+  margin-bottom: 2.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-group input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--color-border, #292929);
+  padding: 1rem 1.2rem;
+  border-radius: 8px;
+  color: var(--color-text, #F5F5F5);
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: rgba(229, 9, 20, 0.5);
+  background: rgba(255,255,255,0.05);
+}
+
+.primary-btn {
+  background: var(--color-primary, #E50914);
+  color: #fff;
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.primary-btn:hover {
+  background: #f6121d;
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-footer {
+  margin-top: 2rem;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.9rem;
+}
+
+.text-muted {
+  color: #888;
+}
+
+.auth-link {
+  color: #FFF;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}

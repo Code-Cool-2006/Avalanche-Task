@@ -1,0 +1,205 @@
+.movie-details-container {
+  min-height: 100vh;
+  background: var(--color-bg, #050505);
+  color: var(--color-text, #F5F5F5);
+}
+
+.backdrop-header {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: flex-end;
+  background: #111;
+}
+
+.backdrop-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--color-bg, #050505) 0%, rgba(5,5,5,0.4) 50%, transparent 100%);
+  z-index: 1;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+  width: 100%;
+}
+
+.main-poster {
+  width: 240px;
+  aspect-ratio: 2/3;
+  background: var(--color-surface, #121212);
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #292929);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+}
+
+.info-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.movie-display-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.meta-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.95rem;
+  color: #AAA;
+}
+
+.meta-rating {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.synopsis {
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #CCC;
+  max-width: 800px;
+}
+
+.section-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.cast-section, .showtimes-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.cast-row {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scrollbar-width: none;
+}
+
+.cast-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 100px;
+}
+
+.cast-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--color-surface, #121212);
+  border: 1px solid var(--color-border, #292929);
+}
+
+.cast-name {
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.85rem;
+  text-align: center;
+  color: #AAA;
+}
+
+.date-picker {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.date-btn {
+  background: var(--color-surface, #121212);
+  border: 1px solid var(--color-border, #292929);
+  color: var(--color-text, #F5F5F5);
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  padding: 0.8rem 1.5rem;
+  border-radius: 30px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.date-btn.active, .date-btn:hover {
+  background: var(--color-primary, #E50914);
+  border-color: var(--color-primary, #E50914);
+}
+
+.theatres-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.theatre-card {
+  background: var(--glass-bg, rgba(18,18,18,0.72));
+  backdrop-filter: var(--glass-blur, blur(20px));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.06));
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.theatre-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.theatre-name {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.format-badge {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  color: #AAA;
+}
+
+.times-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.time-btn {
+  text-decoration: none;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--color-text, #F5F5F5);
+  border: 1px solid var(--color-border, #292929);
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.time-btn:hover {
+  background: var(--color-primary, #E50914);
+  border-color: var(--color-primary, #E50914);
+}
