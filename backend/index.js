@@ -466,6 +466,6 @@ setInterval(async () => {
 }, 3600_000).unref();
 
 export { app, requireAuth };
-if (import.meta.main) {
+if (import.meta.main || process.argv[1]?.endsWith('index.js')) {
   app.listen(PORT, () => console.log(`Auth API on :${PORT}${mailer ? "" : " (no SMTP: OTPs print here)"}`));
 }
