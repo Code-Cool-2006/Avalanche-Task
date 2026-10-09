@@ -7,7 +7,7 @@ import {
   CITIES,
   FOOD_AND_BEVERAGES,
   PROMO_CODES,
-} from "../data/mockCinemaData";
+} from "../data/mockCinemaData.js";
 
 const KEYS = {
   MOVIES: "cine_bms_movies_v3",
@@ -288,14 +288,36 @@ export function cleanupExpiredLocks() {
   const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
   const now = new Date().toISOString();
 
-  const cleaned = showSeats.map((s) => {
-    if (s.status === "LOCKED" && s.lock_expires_at && s.lock_expires_at < now) {
-      return { ...s, status: "AVAILABLE", locked_by: null, lock_expires_at: null };
+  let seatsChanged = false;
+  // Free any locked seat whose lock_expires_at has passed
+  const cleaned = showSeats.filter((s) => {
+    if (s.status === "LOCKED" && s.lock_expires_at && s.lock_expires_at <= now) {
+      seatsChanged = true;
+      return false; // remove lock entry so seat is available again
     }
-    return s;
+    return true;
   });
 
-  setStored(KEYS.SHOW_SEATS, cleaned);
+  if (seatsChanged) {
+    setStored(KEYS.SHOW_SEATS, cleaned);
+  }
+
+  // Also clean up any PENDING bookings that expired without payment
+  const bookings = getStored(KEYS.BOOKINGS, []);
+  let bookingsChanged = false;
+  const updatedBookings = bookings.map((b) => {
+    if (b.status === "PENDING" && b.lock_expires_at && b.lock_expires_at <= now) {
+      bookingsChanged = true;
+      return { ...b, status: "EXPIRED", expired_at: now };
+    }
+    return b;
+  });
+
+  if (bookingsChanged) {
+    setStored(KEYS.BOOKINGS, updatedBookings);
+  }
+
+  return { seatsChanged, bookingsChanged };
 }
 
 // Get live seat layout status for a specific show
@@ -380,8 +402,22 @@ export function lockSeat(showId, seatId, userId = CURRENT_USER.id) {
     (s) => s.show_id === numShowId && s.seat_id === seatId
   );
 
+  // Check if this user already has active locked seats for this showtime
+  const myExistingLocks = showSeats.filter(
+    (s) =>
+      s.show_id === numShowId &&
+      s.locked_by === userId &&
+      s.status === "LOCKED" &&
+      s.lock_expires_at &&
+      new Date(s.lock_expires_at).getTime() > Date.now()
+  );
+
+  // Synchronize reservation deadline: all seats in user session share the 5-minute countdown
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+  const expiresAt =
+    myExistingLocks.length > 0 && myExistingLocks[0].lock_expires_at
+      ? myExistingLocks[0].lock_expires_at
+      : new Date(now.getTime() + 5 * 60 * 1000).toISOString();
 
   if (existing) {
     if (existing.status === "BOOKED") {
@@ -453,7 +489,8 @@ export function createPendingBooking(
   seatIds,
   fnbItems = [],
   promoCode = null,
-  userId = CURRENT_USER.id
+  userId = CURRENT_USER.id,
+  preferredLockExpiresAt = null
 ) {
   if (!seatIds || seatIds.length === 0) {
     throw new Error("Please select at least one seat to proceed.");
@@ -467,7 +504,8 @@ export function createPendingBooking(
   const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
   const numShowId = Number(showId);
 
-  // Validate all requested seats are locked by this user
+  // Validate all requested seats are locked by this user and not expired
+  let lockExpiresAt = preferredLockExpiresAt;
   for (const sId of seatIds) {
     const lock = showSeats.find(
       (ss) =>
@@ -479,6 +517,18 @@ export function createPendingBooking(
     if (!lock) {
       throw new Error(`Seat lock expired or unavailable for ${sId}. Please select again.`);
     }
+    if (!lockExpiresAt && lock.lock_expires_at) {
+      lockExpiresAt = lock.lock_expires_at;
+    }
+  }
+
+  if (!lockExpiresAt) {
+    lockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  }
+
+  if (new Date(lockExpiresAt).getTime() <= Date.now()) {
+    unlockAllMySeats(numShowId, userId);
+    throw new Error("Your 5-minute seat reservation has expired. Please select your seats again.");
   }
 
   // Calculate ticket pricing breakdown
@@ -558,11 +608,32 @@ export function createPendingBooking(
     screen_format: screen.format,
     show_time: show.start_time,
     ticket_code: null,
+    lock_expires_at: lockExpiresAt,
     created_at: new Date().toISOString(),
   };
 
   setStored(KEYS.BOOKINGS, [pendingBooking, ...bookings]);
   return pendingBooking;
+}
+
+// Expire and cancel pending booking & release held seats
+export function expirePendingBooking(bookingId) {
+  const bookings = getStored(KEYS.BOOKINGS, []);
+  const booking = bookings.find((b) => b.id === Number(bookingId));
+
+  if (!booking) return { success: false };
+
+  // Free seats locked by this user
+  unlockAllMySeats(booking.show_id, booking.user_id);
+
+  const updatedBookings = bookings.map((b) =>
+    b.id === Number(bookingId)
+      ? { ...b, status: "EXPIRED", expired_at: new Date().toISOString() }
+      : b
+  );
+  setStored(KEYS.BOOKINGS, updatedBookings);
+
+  return { success: true };
 }
 
 // Generate unique ticket code
@@ -577,11 +648,50 @@ function generateTicketCode() {
 
 // Mock Payment & Booking Confirmation
 export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
+  cleanupExpiredLocks();
+
   const bookings = getStored(KEYS.BOOKINGS, []);
   const booking = bookings.find((b) => b.id === Number(bookingId));
 
   if (!booking) throw new Error("Booking not found.");
   if (booking.status === "CONFIRMED") return booking;
+
+  const now = Date.now();
+  const isExpiredByTime =
+    booking.lock_expires_at && new Date(booking.lock_expires_at).getTime() <= now;
+
+  if (booking.status === "EXPIRED" || isExpiredByTime) {
+    // Release seats immediately
+    unlockAllMySeats(booking.show_id, booking.user_id);
+    const updatedBookings = bookings.map((b) =>
+      b.id === Number(bookingId)
+        ? { ...b, status: "EXPIRED", expired_at: new Date().toISOString() }
+        : b
+    );
+    setStored(KEYS.BOOKINGS, updatedBookings);
+    throw new Error(
+      "Your 5-minute seat reservation has expired. Payment cannot be processed and seats have been released."
+    );
+  }
+
+  // Double-check that all seats are STILL locked by this user in show_seats
+  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  const seatsStillLocked = booking.seat_ids.every((sId) =>
+    showSeats.some(
+      (ss) =>
+        ss.show_id === booking.show_id &&
+        ss.seat_id === sId &&
+        ss.status === "LOCKED" &&
+        ss.locked_by === booking.user_id
+    )
+  );
+
+  if (!seatsStillLocked) {
+    unlockAllMySeats(booking.show_id, booking.user_id);
+    throw new Error(
+      "Seat reservation expired or lost. The seats have been released back to available. Please select your seats again."
+    );
+  }
 
   // Confirm booking
   const ticketCode = generateTicketCode();
@@ -599,7 +709,6 @@ export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
   setStored(KEYS.BOOKINGS, updatedBookings);
 
   // Mark show_seats permanently BOOKED
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
   const updatedShowSeats = showSeats.map((ss) => {
     if (ss.show_id === booking.show_id && booking.seat_ids.includes(ss.seat_id)) {
       return {

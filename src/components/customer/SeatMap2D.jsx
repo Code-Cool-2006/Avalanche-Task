@@ -73,8 +73,7 @@ export default function SeatMap2D({
                 {/* Seats in Row */}
                 <div className="seats-in-row">
                   {rowObj.seats.map((seat) => {
-                    const isSelected =
-                      selectedSet.has(seat.id) || seat.status === "my_locked";
+                    const isSelected = selectedSet.has(seat.id);
                     const isBooked = seat.status === "booked";
                     const isLockedByOther =
                       seat.status === "locked_by_other" ||

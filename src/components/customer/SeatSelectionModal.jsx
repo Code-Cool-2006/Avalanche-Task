@@ -49,21 +49,38 @@ export default function SeatSelectionModal({
   const [timerActive, setTimerActive] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Refs to prevent race conditions and stale closures across rapid clicks and 3D viewport
+  const selectedSeatIdsRef = React.useRef(selectedSeatIds);
+  selectedSeatIdsRef.current = selectedSeatIds;
+
+  const desiredSeatCountRef = React.useRef(desiredSeatCount);
+  desiredSeatCountRef.current = desiredSeatCount;
+
   // Load seats state on mount and poll
-  const refreshSeats = () => {
+  const refreshSeats = (isInitial = false) => {
     try {
       const state = getShowSeatsState(showId);
       setSeatsData(state);
 
-      // Check if user has already locked seats
-      const myLocked = state.allSeats.filter((s) => s.status === "my_locked");
-      if (myLocked.length > 0) {
-        setSelectedSeatIds(myLocked.map((s) => s.id));
-        setTimerActive(true);
-        if (myLocked[0].lockExpiresAt) {
-          const expTime = new Date(myLocked[0].lockExpiresAt).getTime();
-          const remainingSecs = Math.max(0, Math.floor((expTime - Date.now()) / 1000));
-          setTimeLeft(remainingSecs);
+      // On initial load, load existing locks capped to desired seat count
+      if (isInitial) {
+        const myLocked = state.allSeats.filter((s) => s.status === "my_locked");
+        if (myLocked.length > 0) {
+          const limit = desiredSeatCountRef.current;
+          const validSeats = myLocked.slice(0, limit).map((s) => s.id);
+          const excessSeats = myLocked.slice(limit).map((s) => s.id);
+
+          // Free any excess seats from past tests/sessions
+          excessSeats.forEach((id) => unlockSeat(showId, id));
+
+          selectedSeatIdsRef.current = validSeats;
+          setSelectedSeatIds(validSeats);
+          setTimerActive(true);
+          if (myLocked[0].lockExpiresAt) {
+            const expTime = new Date(myLocked[0].lockExpiresAt).getTime();
+            const remainingSecs = Math.max(0, Math.floor((expTime - Date.now()) / 1000));
+            setTimeLeft(remainingSecs);
+          }
         }
       }
     } catch (err) {
@@ -72,10 +89,29 @@ export default function SeatSelectionModal({
   };
 
   useEffect(() => {
-    refreshSeats();
-    const interval = setInterval(refreshSeats, 6000);
+    refreshSeats(true);
+    const interval = setInterval(() => refreshSeats(false), 6000);
     return () => clearInterval(interval);
   }, [showId]);
+
+  // Handle confirming or changing party size
+  const handleConfirmPartySize = (count) => {
+    setDesiredSeatCount(count);
+    desiredSeatCountRef.current = count;
+    setHasChosenSeatCount(true);
+    setErrorMessage("");
+
+    // If user currently has more seats than new count, trim and release the excess
+    const current = selectedSeatIdsRef.current;
+    if (current.length > count) {
+      const toKeep = current.slice(0, count);
+      const toRelease = current.slice(count);
+      toRelease.forEach((id) => unlockSeat(showId, id));
+      selectedSeatIdsRef.current = toKeep;
+      setSelectedSeatIds(toKeep);
+      refreshSeats(false);
+    }
+  };
 
   // Countdown timer for seat locks
   useEffect(() => {
@@ -86,9 +122,10 @@ export default function SeatSelectionModal({
           if (prev <= 1) {
             setTimerActive(false);
             unlockAllMySeats(showId);
+            selectedSeatIdsRef.current = [];
             setSelectedSeatIds([]);
             setErrorMessage("Your 5-minute seat reservation expired. Seats have been freed.");
-            refreshSeats();
+            refreshSeats(false);
             return 0;
           }
           return prev - 1;
@@ -107,24 +144,30 @@ export default function SeatSelectionModal({
   // Toggle seat selection with lock / unlock
   const handleToggleSeat = (seatId) => {
     setErrorMessage("");
-    const isCurrentlySelected = selectedSeatIds.includes(seatId);
+    const currentSelected = selectedSeatIdsRef.current;
+    const currentLimit = desiredSeatCountRef.current;
+    const isCurrentlySelected = currentSelected.includes(seatId);
 
     if (isCurrentlySelected) {
       try {
         unlockSeat(showId, seatId);
-        const updated = selectedSeatIds.filter((id) => id !== seatId);
+        const updated = currentSelected.filter((id) => id !== seatId);
+        selectedSeatIdsRef.current = updated;
         setSelectedSeatIds(updated);
         if (updated.length === 0) {
           setTimerActive(false);
         }
-        refreshSeats();
+        refreshSeats(false);
       } catch (err) {
         setErrorMessage(err.message || "Failed to release seat");
       }
     } else {
-      if (selectedSeatIds.length >= desiredSeatCount) {
+      // STRICT CAP: Block any attempt to select more seats than desiredSeatCount
+      if (currentSelected.length >= currentLimit) {
         setErrorMessage(
-          `You selected ${desiredSeatCount} ${desiredSeatCount === 1 ? "seat" : "seats"} earlier. Deselect one or change seat count.`
+          `You chose ${currentLimit} ${
+            currentLimit === 1 ? "seat" : "seats"
+          }. Deselect a seat to choose a different one, or edit ticket count.`
         );
         return;
       }
@@ -132,17 +175,19 @@ export default function SeatSelectionModal({
       try {
         const res = lockSeat(showId, seatId);
         if (res.success) {
-          setSelectedSeatIds([...selectedSeatIds, seatId]);
+          const updated = [...currentSelected, seatId];
+          selectedSeatIdsRef.current = updated;
+          setSelectedSeatIds(updated);
           setLastSelectedSeatId(seatId);
           if (!timerActive) {
             setTimerActive(true);
             setTimeLeft(300);
           }
-          refreshSeats();
+          refreshSeats(false);
         }
       } catch (err) {
         setErrorMessage(err.message || "Seat could not be selected.");
-        refreshSeats();
+        refreshSeats(false);
       }
     }
   };
@@ -163,6 +208,27 @@ export default function SeatSelectionModal({
       setErrorMessage("Please pick your seats to proceed.");
       return;
     }
+    if (selectedSeatIds.length < desiredSeatCount) {
+      setErrorMessage(
+        `Please select ${desiredSeatCount - selectedSeatIds.length} more ${
+          desiredSeatCount - selectedSeatIds.length === 1 ? "seat" : "seats"
+        } to complete your ${desiredSeatCount}-seat selection.`
+      );
+      return;
+    }
+    if (selectedSeatIds.length > desiredSeatCount) {
+      setErrorMessage(
+        `You have ${selectedSeatIds.length} seats selected, but requested ${desiredSeatCount}. Deselect ${
+          selectedSeatIds.length - desiredSeatCount
+        } seat(s) to proceed.`
+      );
+      return;
+    }
+    const firstLock = selectedSeatsList.find((s) => s.lockExpiresAt);
+    const lockExpiresAt =
+      firstLock?.lockExpiresAt ||
+      new Date(Date.now() + (timeLeft > 0 ? timeLeft * 1000 : 300000)).toISOString();
+
     onProceedToFnb({
       showId,
       seatIds: selectedSeatIds,
@@ -170,6 +236,7 @@ export default function SeatSelectionModal({
       subtotal,
       convenienceFee,
       showDetails,
+      lockExpiresAt,
     });
   };
 
@@ -263,7 +330,7 @@ export default function SeatSelectionModal({
               <button
                 type="button"
                 className="btn-select-seats-cta"
-                onClick={() => setHasChosenSeatCount(true)}
+                onClick={() => handleConfirmPartySize(desiredSeatCount)}
               >
                 <span>Select Seats ({desiredSeatCount})</span>
                 <ChevronRight size={18} />
@@ -413,10 +480,18 @@ export default function SeatSelectionModal({
             <button
               type="button"
               className="btn-proceed-checkout"
-              disabled={selectedSeatIds.length === 0}
+              disabled={selectedSeatIds.length !== desiredSeatCount}
               onClick={handleProceed}
             >
-              <span>Grab Food & Beverages</span>
+              <span>
+                {selectedSeatIds.length === desiredSeatCount
+                  ? "Grab Food & Beverages"
+                  : selectedSeatIds.length === 0
+                  ? `Select ${desiredSeatCount} ${desiredSeatCount === 1 ? "Seat" : "Seats"}`
+                  : `Select ${desiredSeatCount - selectedSeatIds.length} More ${
+                      desiredSeatCount - selectedSeatIds.length === 1 ? "Seat" : "Seats"
+                    }`}
+              </span>
               <ChevronRight size={17} />
             </button>
           </div>

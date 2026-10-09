@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   UtensilsCrossed,
@@ -7,8 +7,11 @@ import {
   Sparkles,
   ChevronRight,
   ShoppingBag,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { FOOD_AND_BEVERAGES } from "../../data/mockCinemaData";
+import { unlockAllMySeats } from "../../services/customerBookingService";
 
 const CATEGORIES = ["ALL", "Combos", "Popcorn", "Snacks", "Beverages"];
 
@@ -17,11 +20,45 @@ export default function FoodAndBeverageModal({
   onProceedWithFnb,
   onSkipFnb,
   onClose,
+  onReservationExpired,
 }) {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [cart, setCart] = useState({}); // { [itemId]: quantity }
 
+  const lockExpiresAt = pendingBookingData?.lockExpiresAt;
+  const calculateRemainingSeconds = () => {
+    if (!lockExpiresAt) return 300;
+    const diff = Math.floor((new Date(lockExpiresAt).getTime() - Date.now()) / 1000);
+    return Math.max(0, diff);
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateRemainingSeconds);
+  const [isExpired, setIsExpired] = useState(() => calculateRemainingSeconds() <= 0);
+
+  // Countdown timer for held seats
+  useEffect(() => {
+    if (isExpired) return;
+    const timer = setInterval(() => {
+      const remaining = calculateRemainingSeconds();
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        setIsExpired(true);
+        if (pendingBookingData?.showId) {
+          unlockAllMySeats(pendingBookingData.showId);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockExpiresAt, isExpired, pendingBookingData?.showId]);
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const handleAdd = (item) => {
+    if (isExpired) return;
     setCart((prev) => ({
       ...prev,
       [item.id]: (prev[item.id] || 0) + 1,
@@ -29,6 +66,7 @@ export default function FoodAndBeverageModal({
   };
 
   const handleRemove = (itemId) => {
+    if (isExpired) return;
     setCart((prev) => {
       const current = prev[itemId] || 0;
       if (current <= 1) {
@@ -79,15 +117,53 @@ export default function FoodAndBeverageModal({
               <p>Pre-book cinema concessions & skip concession queue at the theatre</p>
             </div>
           </div>
-          <button
-            type="button"
-            className="btn-modal-close"
-            onClick={onClose}
-            aria-label="Close Concessions"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="fnb-header-right-controls">
+            {/* 5-Min Seat Hold Timer Badge */}
+            <div className={`countdown-timer-badge ${timeLeft < 60 ? "urgent" : ""}`}>
+              <Clock size={15} className="timer-icon" />
+              <div className="timer-text">
+                <span className="timer-label">Seat Hold:</span>
+                <span className="timer-digits">{formatTimer(timeLeft)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn-modal-close"
+              onClick={onClose}
+              aria-label="Close Concessions"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
+
+        {/* Expired reservation notice overlay */}
+        {isExpired && (
+          <div className="reservation-expired-overlay">
+            <div className="expired-card">
+              <div className="expired-icon-wrap">
+                <AlertTriangle size={36} className="icon-expired" />
+              </div>
+              <h3>5-Minute Reservation Expired</h3>
+              <p>
+                Your 5-minute hold on the selected seats has expired because checkout was not completed in time.
+                The seats have been released back to other guests.
+              </p>
+              <button
+                type="button"
+                className="btn-expired-primary"
+                onClick={() => {
+                  if (onReservationExpired) onReservationExpired();
+                  else onClose();
+                }}
+              >
+                Choose Seats Again
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Category Pills Strip */}
         <div className="fnb-category-tabs-bar">
@@ -200,6 +276,7 @@ export default function FoodAndBeverageModal({
               type="button"
               className="btn-fnb-skip"
               onClick={() => onSkipFnb()}
+              disabled={isExpired}
             >
               Skip
             </button>
@@ -208,6 +285,7 @@ export default function FoodAndBeverageModal({
               type="button"
               className="btn-fnb-proceed"
               onClick={() => onProceedWithFnb(cartItemList)}
+              disabled={isExpired}
             >
               <span>{totalItemCount > 0 ? "Continue with Snacks" : "Proceed to Checkout"}</span>
               <ChevronRight size={16} />

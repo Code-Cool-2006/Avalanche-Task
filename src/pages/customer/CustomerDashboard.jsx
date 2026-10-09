@@ -20,6 +20,7 @@ import {
   getMyBookings,
   getShowDetails,
   createPendingBooking,
+  cleanupExpiredLocks,
 } from "../../services/customerBookingService";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 import {
@@ -50,9 +51,13 @@ const LANGUAGES = ["ALL", "English", "Hindi", "Telugu", "Tamil"];
 const FORMATS = ["ALL", "IMAX 2D", "IMAX 3D", "4DX", "2D", "3D"];
 
 export default function CustomerDashboard() {
-  // Storage initialization
+  // Storage initialization & periodic cleanup for expired 5-minute reservations
   useEffect(() => {
     initializeStorage();
+    const interval = setInterval(() => {
+      cleanupExpiredLocks();
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const [currentCity, setCurrentCity] = useState(() => getSelectedCity());
@@ -148,8 +153,15 @@ export default function CustomerDashboard() {
   const handleProceedToPaymentWithFnb = (fnbItems) => {
     try {
       if (!pendingSeatSelection) return;
-      const { showId, seatIds } = pendingSeatSelection;
-      const newPendingBooking = createPendingBooking(showId, seatIds, fnbItems);
+      const { showId, seatIds, lockExpiresAt } = pendingSeatSelection;
+      const newPendingBooking = createPendingBooking(
+        showId,
+        seatIds,
+        fnbItems,
+        null,
+        1,
+        lockExpiresAt
+      );
       setPendingBooking(newPendingBooking);
       setActiveModal("payment");
     } catch (err) {
@@ -160,6 +172,12 @@ export default function CustomerDashboard() {
 
   const handleSkipFnb = () => {
     handleProceedToPaymentWithFnb([]);
+  };
+
+  const handleReservationExpired = () => {
+    setPendingBooking(null);
+    setPendingSeatSelection(null);
+    setActiveModal("seats");
   };
 
   const handlePaymentSuccess = (cBooking) => {
@@ -430,6 +448,7 @@ export default function CustomerDashboard() {
           onProceedWithFnb={handleProceedToPaymentWithFnb}
           onSkipFnb={handleSkipFnb}
           onClose={handleCloseModal}
+          onReservationExpired={handleReservationExpired}
         />
       )}
 
@@ -440,6 +459,7 @@ export default function CustomerDashboard() {
           onBack={() => setActiveModal("fnb")}
           onPaymentSuccess={handlePaymentSuccess}
           onClose={handleCloseModal}
+          onReservationExpired={handleReservationExpired}
         />
       )}
 

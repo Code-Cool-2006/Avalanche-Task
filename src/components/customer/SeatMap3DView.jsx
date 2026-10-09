@@ -12,6 +12,9 @@ export default function SeatMap3DView({
   const activeSelected = selectedIds || selectedSeatIds || [];
   const containerRef = useRef(null);
   const seatMap3DRef = useRef(null);
+  const onToggleSeatRef = useRef(onToggleSeat);
+  onToggleSeatRef.current = onToggleSeat;
+
   const [tooltip, setTooltip] = useState({ visible: false, seat: null, x: 0, y: 0 });
   const [isSeatViewActive, setIsSeatViewActive] = useState(false);
 
@@ -22,7 +25,9 @@ export default function SeatMap3DView({
       rows,
       selectedIds: activeSelected,
       onToggle: (seatId) => {
-        onToggleSeat(seatId);
+        if (onToggleSeatRef.current) {
+          onToggleSeatRef.current(seatId);
+        }
       },
       onHoverSeat: (info) => {
         setTooltip(info);

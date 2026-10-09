@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   CreditCard,
@@ -15,10 +15,13 @@ import {
   Tag,
   QrCode,
   Building,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import {
   confirmBookingAndPay,
   applyPromoCode,
+  expirePendingBooking,
 } from "../../services/customerBookingService";
 import { PROMO_CODES } from "../../data/mockCinemaData";
 
@@ -27,6 +30,7 @@ export default function PaymentModal({
   onBack,
   onPaymentSuccess,
   onClose,
+  onReservationExpired,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("upi"); // "upi" | "card" | "netbanking"
   const [upiOption, setUpiOption] = useState("gpay"); // "gpay" | "phonepe" | "paytm" | "qr"
@@ -46,6 +50,41 @@ export default function PaymentModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
+  // 5-Minute Reservation Expiry tracking
+  const calculateRemainingSeconds = () => {
+    if (!pendingBooking?.lock_expires_at) return 0;
+    const diff = Math.floor(
+      (new Date(pendingBooking.lock_expires_at).getTime() - Date.now()) / 1000
+    );
+    return Math.max(0, diff);
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateRemainingSeconds);
+  const [isExpired, setIsExpired] = useState(() => calculateRemainingSeconds() <= 0);
+
+  // Active countdown timer effect
+  useEffect(() => {
+    if (isExpired) return;
+
+    const interval = setInterval(() => {
+      const remaining = calculateRemainingSeconds();
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setIsExpired(true);
+        expirePendingBooking(pendingBooking.id);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [pendingBooking?.lock_expires_at, isExpired, pendingBooking?.id]);
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   // Base amounts from pending booking
   const ticketSubtotal = pendingBooking.subtotal || 0;
   const fnbSubtotal = pendingBooking.fnb_subtotal || 0;
@@ -55,6 +94,7 @@ export default function PaymentModal({
   const totalAmount = Math.max(0, ticketSubtotal + fnbSubtotal + convenienceFee - currentDiscount);
 
   const handleApplyPromo = (codeToApply = null) => {
+    if (isExpired) return;
     const code = (codeToApply || promoInput).trim().toUpperCase();
     setPromoError("");
     setPromoMessage("");
@@ -76,12 +116,20 @@ export default function PaymentModal({
   };
 
   const handleRemovePromo = () => {
+    if (isExpired) return;
     setAppliedPromo(null);
     setPromoMessage("");
     setPromoError("");
   };
 
   const handlePay = () => {
+    if (isExpired || timeLeft <= 0) {
+      setIsExpired(true);
+      expirePendingBooking(pendingBooking.id);
+      setError("Your 5-minute seat reservation has expired. Please select your seats again.");
+      return;
+    }
+
     setIsProcessing(true);
     setError("");
 
@@ -106,6 +154,9 @@ export default function PaymentModal({
         onPaymentSuccess(confirmedBooking);
       } catch (err) {
         setIsProcessing(false);
+        if (err.message && err.message.toLowerCase().includes("expired")) {
+          setIsExpired(true);
+        }
         setError(err.message || "Payment authorization failed.");
       }
     }, 1300);
@@ -144,22 +195,91 @@ export default function PaymentModal({
             </button>
             <h2>Checkout & Payment</h2>
           </div>
-          <button
-            type="button"
-            className="btn-modal-close"
-            onClick={onClose}
-            disabled={isProcessing}
-            aria-label="Close Checkout"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="payment-header-right-controls">
+            {/* 5-Min Seat Hold Timer Badge */}
+            <div className={`countdown-timer-badge ${timeLeft < 60 ? "urgent" : ""}`}>
+              <Clock size={15} className="timer-icon" />
+              <div className="timer-text">
+                <span className="timer-label">Seat Hold:</span>
+                <span className="timer-digits">{formatTimer(timeLeft)}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn-modal-close"
+              onClick={onClose}
+              disabled={isProcessing}
+              aria-label="Close Checkout"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
+
+        {/* 5-Minute Reservation Urgency Banner */}
+        {!isExpired && (
+          <div className={`payment-reservation-banner ${timeLeft < 60 ? "urgent" : ""}`}>
+            <div className="banner-left">
+              <Clock size={16} className="timer-icon" />
+              <div className="banner-text">
+                <span className="banner-title">Seats Reserved for 5 Minutes</span>
+                <span className="banner-desc">
+                  Time left to pay before hold is released: <strong>{formatTimer(timeLeft)}</strong>
+                </span>
+              </div>
+            </div>
+            {timeLeft < 60 && (
+              <span className="banner-urgent-pill">Hurry! Expiring Soon</span>
+            )}
+          </div>
+        )}
 
         {error && <div className="payment-error-alert">{error}</div>}
 
-        <div className="payment-modal-body">
-          {/* Left Column: Order Review */}
-          <div className="payment-order-summary-col">
+        {/* Expired State: When reservation times out without payment */}
+        {isExpired ? (
+          <div className="payment-expired-view">
+            <div className="payment-expired-card">
+              <div className="expired-icon-wrap">
+                <AlertTriangle size={48} className="icon-expired" />
+              </div>
+              <div className="expired-badge">RESERVATION EXPIRED</div>
+              <h3>5-Minute Seat Reservation Has Ended</h3>
+              <p>
+                Payment was not completed within the 5-minute reservation window.
+                To ensure fairness for all moviegoers, seat(s){" "}
+                <strong>
+                  {pendingBooking.seats_summary?.map((s) => `${s.row}${s.number}`).join(", ")}
+                </strong>{" "}
+                have been automatically released back to available.
+              </p>
+              <div className="expired-actions">
+                <button
+                  type="button"
+                  className="btn-expired-primary"
+                  onClick={() => {
+                    if (onReservationExpired) onReservationExpired();
+                    else onBack();
+                  }}
+                >
+                  Select Seats Again
+                </button>
+                <button
+                  type="button"
+                  className="btn-expired-secondary"
+                  onClick={onClose}
+                >
+                  Return to Movies
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="payment-modal-body">
+            {/* Left Column: Order Review */}
+            <div className="payment-order-summary-col">
             <div className="summary-movie-card">
               <img
                 src={pendingBooking.movie_poster}
@@ -516,7 +636,8 @@ export default function PaymentModal({
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
