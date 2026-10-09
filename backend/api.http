@@ -1,14 +1,18 @@
+### Test backend server
+GET http://localhost:4000/
+
+
 ### GET ALL MOVIES
-GET http://localhost:5000/movies
+GET http://localhost:4000/movies
 
 
 ### GET MOVIE BY ID
-GET http://localhost:5000/movies/2
+GET http://localhost:4000/movies/2
 
 
 
 ### CREATE MOVIE
-POST http://localhost:5000/movies/create
+POST http://localhost:4000/movies/create
 Content-Type: application/json
 
 
@@ -26,7 +30,7 @@ Content-Type: application/json
 
 
 ### UPDATE MOVIE
-PUT http://localhost:5000/movies/update/4
+PUT http://localhost:4000/movies/update/4
 Content-Type: application/json
 
 {
@@ -47,14 +51,14 @@ DELETE http://localhost:5000/movies/delete/4
 
 
 ### GET ALL THEATRES
-GET http://localhost:5000/theatres
+GET http://localhost:4000/theatres
 
 ### GET THEATRE BY ID
-GET http://localhost:5000/theatres/1
+GET http://localhost:4000/theatres/1
 
 
 ### CREATE THEATRE
-POST http://localhost:5000/theatres/create
+POST http://localhost:4000/theatres/create
 Content-Type: application/json
 
 {
@@ -64,7 +68,7 @@ Content-Type: application/json
 }
 
 ### UPDATE THEATRE
-PUT http://localhost:5000/theatres/update/1
+PUT http://localhost:4000/theatres/update/1
 Content-Type: application/json
 
 {
@@ -74,20 +78,20 @@ Content-Type: application/json
 }
 
 ### DELETE THEATRE
-DELETE http://localhost:5000/theatres/delete/99
+DELETE http://localhost:4000/theatres/delete/99
 
 
 ### GET ALL SCREENS
-GET http://localhost:5000/screens
+GET http://localhost:4000/screens
 
 
 ### GET  SCREEN BY ID
 
-GET http://localhost:5000/screens/1
+GET http://localhost:4000/screens/1
 
 
 ### CREATE SCREEN
-POST http://localhost:5000/screens/create
+POST http://localhost:4000/screens/create
 Content-Type: application/json
 
 {
@@ -96,7 +100,7 @@ Content-Type: application/json
 }
 
 ### UPDATE SCREEN
-PUT http://localhost:5000/screens/update/1
+PUT http://localhost:4000/screens/update/1
 Content-Type: application/json
 
 {
@@ -105,14 +109,14 @@ Content-Type: application/json
 }
 
 ### DELETE SCREEN
-DELETE http://localhost:5000/screens/delete/1
+DELETE http://localhost:4000/screens/delete/1
 
 
 ### GET SEATS FOR SCREEN
-GET http://localhost:5000/screens/2/seats
+GET http://localhost:4000/screens/2/seats
 
 ### CREATE SEAT
-POST http://localhost:5000/screens/2/seats/create
+POST http://localhost:4000/screens/2/seats/create
 Content-Type: application/json
 
 {
@@ -123,7 +127,7 @@ Content-Type: application/json
 
 
 ### UPDATE SEAT
-PUT http://localhost:5000/seats/update/1
+PUT http://localhost:4000/seats/update/1
 Content-Type: application/json
 
 {
@@ -133,4 +137,74 @@ Content-Type: application/json
 }
 
 ### DELETE SEAT
-DELETE http://localhost:5000/seats/delete/1
+DELETE http://localhost:4000/seats/delete/1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 1. Check backend
+GET http://localhost:4000/
+
+### 2. Register a new user
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "testuser@example.com",
+  "password": "MovieBooking123"
+}
+
+### 3. Login
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "MovieBooking123"
+}
+
+### 4. Test incorrect password
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "WrongPassword123"
+}
+
+### 5. Logout
+POST http://localhost:4000/api/auth/logout
+Content-Type: application/json
+
+
+
+### Send registration OTP
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "tostorepersonal@gmail.com",
+  "password": "MovieBooking123"
+}
+
+
+### Verify email OTP
+POST http://localhost:4000/api/auth/verify-otp
+Content-Type: application/json
+
+{
+  "email": "tostorepersonal@gmail.com",
+  "otp": "697445"
+}
