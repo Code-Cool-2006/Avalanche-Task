@@ -53,6 +53,9 @@ export const createMovie = async (req, res) => {
       });
     }
 
+    const parsedDuration = duration_min !== undefined && duration_min !== null ? Math.round(Number(duration_min)) : null;
+    const parsedRating = rating !== undefined && rating !== null ? Math.round(Number(rating)) : null;
+
     const result = await pool.query(
       `INSERT INTO movies 
       (title, description, genre, language, duration_min, rating, poster_url, trailer_url, release_date)
@@ -63,8 +66,8 @@ export const createMovie = async (req, res) => {
         description,
         genre,
         language,
-        duration_min,
-        rating,
+        parsedDuration,
+        parsedRating,
         poster_url,
         trailer_url,
         release_date,
@@ -107,6 +110,9 @@ export const updateMovie = async (req, res) => {
       return res.status(404).json({ message: "Movie not found" });
     }
 
+    const parsedDuration = duration_min !== undefined && duration_min !== null ? Math.round(Number(duration_min)) : null;
+    const parsedRating = rating !== undefined && rating !== null ? Math.round(Number(rating)) : null;
+
     const result = await pool.query(
       `UPDATE movies
        SET title = COALESCE($1, title),
@@ -125,8 +131,8 @@ export const updateMovie = async (req, res) => {
         description,
         genre,
         language,
-        duration_min,
-        rating,
+        parsedDuration,
+        parsedRating,
         poster_url,
         trailer_url,
         release_date,

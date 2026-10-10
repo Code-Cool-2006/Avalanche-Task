@@ -4280,70 +4280,85 @@ html, body {
 
 /* 10. PAYMENT MODAL */
 .payment-modal-container {
-  background: var(--bg-surface-1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #0e1526 0%, #080c16 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
   width: 100%;
-  max-width: 880px;
+  max-width: 890px;
+  max-height: min(92vh, 800px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 50px rgba(248, 68, 100, 0.12);
+  animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .payment-modal-header {
-  padding: 18px 24px;
-  background: var(--bg-surface-2);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .payment-header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .btn-back-seats {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 5px 10px;
   color: #38bdf8;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-back-seats:hover {
-  text-decoration: underline;
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  transform: translateX(-2px);
 }
 
 .payment-header-left h2 {
-  font-size: 1.25rem;
+  font-size: 1.18rem;
   font-weight: 800;
   color: #fff;
+  letter-spacing: -0.01em;
 }
 
 .payment-header-right-controls,
 .fnb-header-right-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .payment-reservation-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px;
+  padding: 6px 20px;
   background: linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.06) 100%);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
   color: #fef3c7;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .payment-reservation-banner.urgent {
@@ -4550,34 +4565,56 @@ html, body {
 .payment-modal-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 24px;
-  gap: 28px;
+  padding: 14px 20px;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.payment-modal-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.payment-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.payment-modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.payment-modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .payment-order-summary-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .summary-movie-card {
   display: flex;
-  gap: 14px;
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border-subtle);
+  gap: 12px;
+  background: rgba(18, 26, 44, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .summary-poster {
-  width: 64px;
-  height: 96px;
-  border-radius: 8px;
+  width: 50px;
+  height: 72px;
+  border-radius: 6px;
   object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .summary-movie-details h3 {
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   font-weight: 700;
   color: #fff;
 }
@@ -4586,33 +4623,34 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 4px 0 8px;
+  margin: 2px 0 5px;
 }
 
 .summary-info-line {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-body);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .payment-bill-breakdown {
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border-subtle);
+  background: rgba(18, 26, 44, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 16px;
+  padding: 11px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .payment-bill-breakdown h4 {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .bill-row {
@@ -4648,25 +4686,25 @@ html, body {
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: 10px;
-  padding: 12px;
+  padding: 8px 12px;
 }
 
 .ssl-security-badge strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #6ee7b7;
 }
 
 .ssl-security-badge p {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #a7f3d0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .payment-form-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .payment-form-col h4 {
@@ -4698,23 +4736,36 @@ html, body {
 }
 
 .method-tab.active {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: var(--cyan-primary);
-  color: #38bdf8;
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+  background: rgba(248, 68, 100, 0.14);
+  border-color: var(--bms-primary);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(248, 68, 100, 0.25);
 }
 
 .cinema-visual-card {
   width: 100%;
   aspect-ratio: 1.65 / 1;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #0284c7 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #4c0519 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 14px;
-  padding: 18px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.cinema-visual-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(248, 68, 100, 0.15) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .card-top {
@@ -4726,22 +4777,27 @@ html, body {
 .card-brand {
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: #fde68a;
+  text-shadow: 0 0 8px rgba(253, 230, 138, 0.4);
 }
 
 .card-chip {
   font-size: 0.85rem;
   font-weight: 800;
   color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card-number-display {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   letter-spacing: 0.12em;
   color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
 }
 
 .card-bottom {
@@ -4751,8 +4807,10 @@ html, body {
 }
 
 .card-lbl {
-  font-size: 0.62rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .card-val {
@@ -4762,83 +4820,137 @@ html, body {
   font-family: var(--font-mono);
 }
 
-.card-inputs-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.input-group label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.input-group input {
-  background: var(--bg-surface-2);
-  border: 1px solid var(--border-medium);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: #fff;
-  font-size: 0.85rem;
-  outline: none;
-}
-
-.input-group input:focus {
-  border-color: var(--cyan-primary);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
-}
-
-.input-row-half {
+/* Card Inputs & Form Fields */
+.form-fields-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
-.one-click-pay-box {
-  background: var(--bg-surface-2);
-  border: 1px dashed var(--border-medium);
-  border-radius: 12px;
-  padding: 30px 20px;
-  text-align: center;
+.form-group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
-.btn-pay-submit {
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.credit-input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.credit-input:focus {
+  border-color: var(--bms-primary);
+  background: rgba(18, 28, 50, 0.95);
+  box-shadow: 0 0 0 3px rgba(248, 68, 100, 0.22), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Net Banking Grid */
+.netbanking-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.netbank-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.netbank-card:hover {
+  background: rgba(26, 38, 66, 0.85);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.netbank-card.active {
+  background: rgba(248, 68, 100, 0.16);
+  border-color: var(--bms-primary);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(248, 68, 100, 0.25);
+}
+
+/* Final Pay CTA & Terms */
+.payment-final-submit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-submit-payment {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
+  gap: 9px;
+  background: linear-gradient(135deg, #f84464 0%, #e11d48 50%, #be123c 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
-  padding: 13px;
-  font-size: 0.95rem;
-  font-weight: 700;
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-  transition: all 0.2s ease;
+  box-shadow: 0 6px 22px rgba(248, 68, 100, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-pay-submit:hover:not(:disabled) {
-  filter: brightness(1.1);
+.btn-submit-payment:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 10px 28px rgba(248, 68, 100, 0.6), 0 0 24px rgba(248, 68, 100, 0.35);
+  filter: brightness(1.08);
 }
 
-.payment-guarantee-note {
+.btn-submit-payment:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(248, 68, 100, 0.4);
+}
+
+.btn-submit-payment:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+.payment-terms-notice {
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
 }
 
 .spinner {
@@ -4848,6 +4960,18 @@ html, body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .payment-modal-container {
+    max-height: 94vh;
+    border-radius: 16px;
+  }
+  .payment-modal-body {
+    grid-template-columns: 1fr;
+    padding: 14px 16px;
+    gap: 16px;
+  }
 }
 
 /* 11. TICKET CONFIRMATION PASS */
@@ -4981,121 +5105,161 @@ html, body {
   margin-top: 2px;
 }
 
-.ticket-seats-grid {
+/* Seating & Audi details 2x2 grid */
+.ticket-meta-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  background: rgba(20, 30, 51, 0.6);
-  border-radius: 10px;
-  padding: 12px;
+  gap: 10px 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
 }
 
-.ticket-data-box {
+.ticket-meta-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
-.data-lbl {
+.cell-lbl {
   font-size: 0.65rem;
-  color: var(--text-muted);
+  color: #94a3b8;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.data-val {
-  font-size: 0.88rem;
+.cell-val {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
 }
 
-.data-val.highlight {
+.cell-val.highlight {
   color: #38bdf8;
 }
 
-.data-val.mono {
-  font-family: var(--font-mono);
-}
-
-/* Perforation Notch */
-.ticket-perforated-divider {
-  width: 20px;
+/* Authentic Ticket Perforation Notch & Rip Line */
+.ticket-perforation-divider {
+  width: 26px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   position: relative;
+  flex-shrink: 0;
 }
 
-.notch {
-  width: 20px;
-  height: 20px;
+.perforation-notch {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--bg-surface-1);
+  background: #080c16;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: absolute;
+  left: 1px;
+  z-index: 2;
 }
 
-.notch-top { transform: translateY(-50%); }
-.notch-bottom { transform: translateY(50%); }
+.perforation-notch.notch-left {
+  top: -12px;
+}
 
-.dashed-line {
+.perforation-notch.notch-right {
+  bottom: -12px;
+}
+
+.perforation-dashed-line {
   flex: 1;
   width: 1px;
-  border-left: 2px dashed rgba(255, 255, 255, 0.2);
+  border-left: 2px dashed rgba(255, 255, 255, 0.22);
+  margin: 16px 0;
 }
 
+/* Right Stub & Dynamic QR Turnstile Pass */
 .ticket-stub-section {
-  width: 170px;
-  background: #090e1a;
-  padding: 20px 14px;
+  width: 195px;
+  background: rgba(8, 13, 24, 0.95);
+  padding: 18px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 6px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
-.qr-code-box {
-  width: 120px;
-  height: 120px;
-  background: #fff;
-  border-radius: 8px;
-  padding: 4px;
+.qr-box {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
 }
 
 .ticket-qr-img {
-  width: 100%;
-  height: 100%;
+  width: 124px;
+  height: 124px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 6px;
+  display: block;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.qr-placeholder {
+  width: 124px;
+  height: 124px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.ticket-code-display {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fde68a;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
   display: block;
 }
 
-.ticket-code-label {
-  font-size: 0.65rem;
+.qr-scan-hint {
+  font-size: 0.66rem;
   color: var(--text-muted);
+  line-height: 1.25;
+  display: block;
+}
+
+.entry-gate-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.68rem;
   font-weight: 700;
-  margin-top: 4px;
+  color: #6ee7b7;
+  white-space: nowrap;
 }
 
-.ticket-code-text {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #fef08a;
-}
-
-.scan-guard-hint {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-}
-
+/* Footer Actions */
+.ticket-modal-actions-footer,
 .ticket-modal-actions {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 24px 24px;
-  background: var(--bg-surface-2);
+  padding: 16px 24px 22px;
+  background: rgba(11, 17, 30, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-ticket-action {
@@ -5104,33 +5268,34 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f1f5f9;
   border-radius: 10px;
-  padding: 11px;
+  padding: 11px 18px;
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.btn-print {
-  background: var(--bg-surface-3);
-  border: 1px solid var(--border-medium);
-  color: #fff;
+.btn-ticket-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
 }
 
-.btn-print:hover {
-  border-color: #38bdf8;
+.btn-ticket-action.primary {
+  background: linear-gradient(135deg, #f84464 0%, #e11d48 100%);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(248, 68, 100, 0.4);
 }
 
-.btn-view-bookings {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #fde68a;
-}
-
-.btn-view-bookings:hover {
-  background: var(--amber-primary);
-  color: #000;
+.btn-ticket-action.primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 26px rgba(248, 68, 100, 0.6);
+  transform: translateY(-2px);
 }
 
 .btn-done {
@@ -6883,26 +7048,26 @@ html, body {
 /* PROMO CODES IN CHECKOUT */
 .payment-fnb-summary-box {
   background: rgba(26, 34, 48, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 9px 12px;
 }
 
 .fnb-box-title {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .fnb-item-receipt-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-body);
   padding: 2px 0;
 }
@@ -6910,18 +7075,18 @@ html, body {
 .payment-promo-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: rgba(248, 68, 100, 0.05);
+  gap: 8px;
+  background: rgba(248, 68, 100, 0.04);
   border: 1px dashed rgba(248, 68, 100, 0.35);
   border-radius: 12px;
-  padding: 14px;
+  padding: 10px 12px;
 }
 
 .promo-header-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #fff;
 }
@@ -6933,26 +7098,39 @@ html, body {
 
 .promo-input-field {
   flex: 1;
-  background: rgba(18, 22, 32, 0.8);
+  background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   outline: none;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+}
+
+.promo-input-field:focus {
+  border-color: var(--bms-primary);
+  box-shadow: 0 0 0 2px rgba(248, 68, 100, 0.2);
 }
 
 .btn-apply-promo {
-  background: var(--bms-primary);
+  background: linear-gradient(135deg, #f84464 0%, #e11d48 100%);
   border: none;
   color: #fff;
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.15s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(248, 68, 100, 0.3);
+}
+
+.btn-apply-promo:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 .applied-promo-card {
@@ -6962,7 +7140,7 @@ html, body {
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 7px 12px;
 }
 
 .applied-promo-info {
@@ -6972,7 +7150,7 @@ html, body {
 }
 
 .applied-code-title {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #fff;
 }
@@ -6999,20 +7177,22 @@ html, body {
 }
 
 .quick-coupon-tag {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-body);
-  border-radius: 12px;
-  padding: 3px 8px;
-  font-size: 0.68rem;
+  background: rgba(248, 68, 100, 0.08);
+  border: 1px dashed rgba(248, 68, 100, 0.35);
+  color: #fda4af;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .quick-coupon-tag:hover {
-  background: rgba(248, 68, 100, 0.15);
+  background: rgba(248, 68, 100, 0.2);
   border-color: var(--bms-primary);
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .promo-success-text {

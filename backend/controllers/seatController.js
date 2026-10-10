@@ -19,6 +19,8 @@ export const getSeatsByScreen = async (req, res) => {
   }
 };
 
+const VALID_TIERS = ["regular", "premium", "recliner"];
+
 // CREATE SEAT FOR A SCREEN
 export const createSeatForScreen = async (req, res) => {
   try {
@@ -31,9 +33,16 @@ export const createSeatForScreen = async (req, res) => {
       });
     }
 
+    const seatTier = (tier || "regular").toLowerCase();
+    if (!VALID_TIERS.includes(seatTier)) {
+      return res.status(400).json({
+        message: `Invalid tier '${tier}'. Allowed: ${VALID_TIERS.join(", ")}`,
+      });
+    }
+
     const result = await pool.query(
       "INSERT INTO seats (screen_id, row_label, seat_number, tier) VALUES ($1, $2, $3, $4) RETURNING *",
-      [screenId, row_label, seat_number, tier || "regular"]
+      [screenId, row_label, seat_number, seatTier]
     );
 
     return res.status(201).json(result.rows[0]);
@@ -55,12 +64,19 @@ export const updateSeat = async (req, res) => {
       });
     }
 
+    const seatTier = (tier || "regular").toLowerCase();
+    if (!VALID_TIERS.includes(seatTier)) {
+      return res.status(400).json({
+        message: `Invalid tier '${tier}'. Allowed: ${VALID_TIERS.join(", ")}`,
+      });
+    }
+
     const result = await pool.query(
       `UPDATE seats
        SET row_label = $1, seat_number = $2, tier = $3
        WHERE id = $4
        RETURNING *`,
-      [row_label, seat_number, tier || "regular", id]
+      [row_label, seat_number, seatTier, id]
     );
 
     if (result.rows.length === 0) {
