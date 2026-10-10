@@ -12,6 +12,10 @@ import movieRoutes from "./routes/movieRoutes.js";
 import theatreRoutes from "./routes/theatreRoutes.js";
 import screenRoutes from "./routes/screenRoutes.js";
 import seatRoutes from "./routes/seatRoutes.js";
+import showRoutes from "./routes/showRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 
@@ -34,11 +38,15 @@ app.use("/api/auth", rateLimit({
 
 app.use("/api/auth", authRoutes);
 
-// Keep your existing cinema endpoints.
+//API end points.
 app.use("/", movieRoutes);
 app.use("/", theatreRoutes);
-app.use("/", screenRoutes);
+app.use("/screens", screenRoutes);
 app.use("/", seatRoutes);
+app.use("/api/shows", showRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ message: "MovieBooking backend is running." });

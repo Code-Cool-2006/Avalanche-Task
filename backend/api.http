@@ -121,7 +121,7 @@ Content-Type: application/json
 
 {
     "row_label": "A",
-    "seat_number": 1,
+    "seat_number": 2,
     "tier": "regular"
 }
 
@@ -144,6 +144,30 @@ DELETE http://localhost:4000/seats/delete/1
 
 
 
+### 1. GET ALL SHOWS
+GET http://localhost:4000/api/shows
+
+
+### 2. GET SHOW BY ID
+GET http://localhost:4000/api/shows/1
+
+
+### 3. CREATE SHOW
+POST http://localhost:4000/api/shows
+Content-Type: application/json
+
+{
+  "movie_id": 1,
+  "screen_id": 2,
+  "start_time": "2026-12-20T18:30:00",
+  "price_regular": 150,
+  "price_premium": 220,
+  "price_recliner": 350
+}
+
+
+### 4. GET SEATS FOR SCREEN 1
+GET http://localhost:4000/screens/1/seats
 
 
 
@@ -152,10 +176,8 @@ DELETE http://localhost:4000/seats/delete/1
 
 
 
-### 1. Check backend
-GET http://localhost:4000/
 
-### 2. Register a new user
+### Register a new user
 POST http://localhost:4000/api/auth/register
 Content-Type: application/json
 
@@ -165,16 +187,16 @@ Content-Type: application/json
   "password": "MovieBooking123"
 }
 
-### 3. Login
+### Login
 POST http://localhost:4000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "testuser@example.com",
-  "password": "MovieBooking123"
+  "email": "amoolyakhallikeri@gmail.com",
+  "password": "Amoolya@123456"
 }
 
-### 4. Test incorrect password
+### Test incorrect password
 POST http://localhost:4000/api/auth/login
 Content-Type: application/json
 
@@ -183,7 +205,7 @@ Content-Type: application/json
   "password": "WrongPassword123"
 }
 
-### 5. Logout
+### Logout
 POST http://localhost:4000/api/auth/logout
 Content-Type: application/json
 
@@ -208,3 +230,61 @@ Content-Type: application/json
   "email": "tostorepersonal@gmail.com",
   "otp": "697445"
 }
+
+
+
+
+
+### CREATE BOOKING
+POST http://localhost:4000/api/bookings
+Content-Type: application/json
+
+{
+  "show_id": 3,
+  "seat_ids": [8]
+}
+
+
+
+### GET MY BOOKINGS
+GET http://localhost:4000/api/bookings/my
+
+
+### GET BOOKING BY ID
+GET http://localhost:4000/api/bookings/1
+
+
+### CANCEL PENDING BOOKING
+PATCH http://localhost:4000/api/bookings/1/cancel
+
+
+### ADMIN: GET ALL BOOKINGS
+GET http://localhost:4000/api/bookings
+
+
+
+### PAY FOR A PENDING BOOKING (DEMO ONLY)
+POST http://localhost:4000/api/payments
+Content-Type: application/json
+
+{
+  "booking_id": 2
+}
+
+
+### GET PAYMENT DETAILS
+GET http://localhost:4000/api/payments/booking/1
+
+
+
+### CREATE RAZORPAY ORDER
+POST http://localhost:4000/api/payments
+Content-Type: application/json
+
+{
+  "booking_id": 2
+}
+
+###
+GET http://localhost:4000/api/admin/movies
+Content-Type: application/json
