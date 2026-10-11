@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CustomerNavbar from "../../components/customer/CustomerNavbar";
 import HeroBanner from "../../components/customer/HeroBanner";
 import MovieCard from "../../components/customer/MovieCard";
@@ -11,6 +11,7 @@ import TicketConfirmationModal from "../../components/customer/TicketConfirmatio
 import MyBookingsModal from "../../components/customer/MyBookingsModal";
 import TrailerModal from "../../components/customer/TrailerModal";
 import CitySelectorModal from "../../components/customer/CitySelectorModal";
+import OffersModal from "../../components/customer/OffersModal";
 
 import {
   initializeStorage,
@@ -21,18 +22,16 @@ import {
   getShowDetails,
   createPendingBooking,
   cleanupExpiredLocks,
+  syncFromBackend,
+  getWatchlist,
 } from "../../services/customerBookingService";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 import {
   Sparkles,
   Film,
-  ShieldCheck,
-  Armchair,
-  QrCode,
   Flame,
   CalendarDays,
-  SlidersHorizontal,
-  ChevronDown,
+  Heart,
 } from "lucide-react";
 
 const GENRES = [
@@ -51,9 +50,10 @@ const LANGUAGES = ["ALL", "English", "Hindi", "Telugu", "Tamil"];
 const FORMATS = ["ALL", "IMAX 2D", "IMAX 3D", "4DX", "2D", "3D"];
 
 export default function CustomerDashboard() {
-  // Storage initialization & periodic cleanup for expired 5-minute reservations
+  // Storage initialization, backend synchronization & periodic cleanup
   useEffect(() => {
     initializeStorage();
+    syncFromBackend().catch(() => {});
     const interval = setInterval(() => {
       cleanupExpiredLocks();
     }, 3000);
@@ -63,15 +63,27 @@ export default function CustomerDashboard() {
   const [currentCity, setCurrentCity] = useState(() => getSelectedCity());
   const [showCityModal, setShowCityModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("NOW_SHOWING"); // "NOW_SHOWING" | "COMING_SOON"
+  const [statusFilter, setStatusFilter] = useState("NOW_SHOWING"); // "NOW_SHOWING" | "COMING_SOON" | "WATCHLIST" | "ALL"
   const [selectedGenre, setSelectedGenre] = useState("ALL");
   const [selectedLanguage, setSelectedLanguage] = useState("ALL");
   const [selectedFormat, setSelectedFormat] = useState("ALL");
   const [sortBy, setSortBy] = useState("popular"); // "popular" | "rating" | "latest"
-  const [bookingsList, setBookingsList] = useState([]);
+  const [bookingsList, setBookingsList] = useState(() => getMyBookings());
+  const [watchlistCount, setWatchlistCount] = useState(() => getWatchlist().length);
+  const [watchlistVersion, setWatchlistVersion] = useState(0);
+
+  // Sync watchlist live across actions
+  useEffect(() => {
+    const handleWatchlistChange = () => {
+      setWatchlistCount(getWatchlist().length);
+      setWatchlistVersion((v) => v + 1);
+    };
+    window.addEventListener("cine_watchlist_updated", handleWatchlistChange);
+    return () => window.removeEventListener("cine_watchlist_updated", handleWatchlistChange);
+  }, []);
 
   // Modals state
-  const [activeModal, setActiveModal] = useState(null); // 'detail' | 'showtimes' | 'seats' | 'fnb' | 'payment' | 'ticket' | 'my_bookings' | 'trailer' | null
+  const [activeModal, setActiveModal] = useState(null); // 'detail' | 'showtimes' | 'seats' | 'fnb' | 'payment' | 'ticket' | 'my_bookings' | 'trailer' | 'offers' | null
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [activeShow, setActiveShow] = useState(null);
   const [activeShowDetails, setActiveShowDetails] = useState(null);
@@ -85,10 +97,6 @@ export default function CustomerDashboard() {
     setBookingsList(b);
   };
 
-  useEffect(() => {
-    refreshBookings();
-  }, []);
-
   // Update city preference
   const handleCityChange = (city) => {
     setCurrentCity(city);
@@ -97,6 +105,7 @@ export default function CustomerDashboard() {
 
   // Filtered movies
   const movies = useMemo(() => {
+    if (watchlistVersion < 0) return [];
     let list = getMovies({
       query: searchQuery,
       genre: selectedGenre,
@@ -113,7 +122,7 @@ export default function CustomerDashboard() {
     }
 
     return list;
-  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity]);
+  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity, watchlistVersion]);
 
   // Featured movies for hero carousel
   const featuredMovies = useMemo(() => {
@@ -209,6 +218,14 @@ export default function CustomerDashboard() {
         bookingsCount={confirmedCount}
         onOpenMyBookings={handleOpenMyBookings}
         onSelectMovieDirect={handleOpenDetail}
+        onSelectFilter={() => {
+          setStatusFilter("NOW_SHOWING");
+          setSelectedFormat("ALL");
+          setSelectedGenre("ALL");
+          setSelectedLanguage("ALL");
+          setSearchQuery("");
+        }}
+        onOpenOffers={() => setActiveModal("offers")}
       />
 
       {/* Hero Showcase Banner */}
@@ -224,12 +241,15 @@ export default function CustomerDashboard() {
       {/* Main Movies Catalog Section */}
       <main className="catalog-main-content">
         <div className="catalog-controls-container">
-          {/* BookMyShow Tab Navigation: Now Showing vs Coming Soon */}
+          {/* BookMyShow Tab Navigation: Now Showing vs Coming Soon vs Watchlist */}
           <div className="bms-main-view-tabs">
             <button
               type="button"
               className={`bms-view-tab ${statusFilter === "NOW_SHOWING" ? "active" : ""}`}
-              onClick={() => setStatusFilter("NOW_SHOWING")}
+              onClick={() => {
+                setStatusFilter("NOW_SHOWING");
+                setSelectedFormat("ALL");
+              }}
             >
               <Flame size={18} className="icon-crimson" />
               <span>Now Showing</span>
@@ -237,10 +257,24 @@ export default function CustomerDashboard() {
             <button
               type="button"
               className={`bms-view-tab ${statusFilter === "COMING_SOON" ? "active" : ""}`}
-              onClick={() => setStatusFilter("COMING_SOON")}
+              onClick={() => {
+                setStatusFilter("COMING_SOON");
+                setSelectedFormat("ALL");
+              }}
             >
               <CalendarDays size={18} className="icon-cyan" />
               <span>Coming Soon</span>
+            </button>
+            <button
+              type="button"
+              className={`bms-view-tab ${statusFilter === "WATCHLIST" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("WATCHLIST");
+                setSelectedFormat("ALL");
+              }}
+            >
+              <Heart size={18} className="icon-crimson" />
+              <span>My Watchlist ({watchlistCount})</span>
             </button>
           </div>
 
@@ -249,13 +283,23 @@ export default function CustomerDashboard() {
               <div className="section-badge">
                 <Sparkles size={14} className="icon-crimson" />
                 <span>
-                  {statusFilter === "NOW_SHOWING" ? "EXPERIENCE IN THEATRES" : "UPCOMING CINEMA RELEASES"}
+                  {statusFilter === "NOW_SHOWING"
+                    ? "EXPERIENCE IN THEATRES"
+                    : statusFilter === "COMING_SOON"
+                    ? "UPCOMING CINEMA RELEASES"
+                    : statusFilter === "WATCHLIST"
+                    ? "SAVED FAVORITES"
+                    : "ALL CINEMA EXPERIENCES"}
                 </span>
               </div>
               <h2>
                 {statusFilter === "NOW_SHOWING"
                   ? `Movies Screening in ${currentCity}`
-                  : `Anticipated Movies Coming to ${currentCity}`}
+                  : statusFilter === "COMING_SOON"
+                  ? `Anticipated Movies Coming to ${currentCity}`
+                  : statusFilter === "WATCHLIST"
+                  ? `Your Saved Watchlist Movies`
+                  : `Movies Screening in ${currentCity}`}
               </h2>
             </div>
 
@@ -338,8 +382,12 @@ export default function CustomerDashboard() {
         {movies.length === 0 ? (
           <div className="catalog-empty-search-state">
             <Film size={48} className="empty-icon" />
-            <h3>No movies found</h3>
-            <p>We couldn't find any movie matching your current filters.</p>
+            <h3>{statusFilter === "WATCHLIST" ? "Your Watchlist is Empty" : "No movies found"}</h3>
+            <p>
+              {statusFilter === "WATCHLIST"
+                ? "Click the heart button on any movie card to save it to your personal watchlist for quick access."
+                : "We couldn't find any movie matching your current filters."}
+            </p>
             <button
               type="button"
               className="btn-reset-filters"
@@ -349,9 +397,10 @@ export default function CustomerDashboard() {
                 setSelectedLanguage("ALL");
                 setSelectedFormat("ALL");
                 setStatusFilter("NOW_SHOWING");
+                setSortBy("popular");
               }}
             >
-              Reset Search & Filters
+              {statusFilter === "WATCHLIST" ? "Browse Now Showing" : "Reset Search & Filters"}
             </button>
           </div>
         ) : (
@@ -368,36 +417,6 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Features / Benefits Strip */}
-        <div className="cinema-perks-strip">
-          <div className="perk-box">
-            <div className="perk-icon-wrap">
-              <Armchair size={22} className="icon-cyan" />
-            </div>
-            <div className="perk-text">
-              <h4>3D Interactive Sightline Map</h4>
-              <p>Preview the exact auditorium angle and screen perspective before picking your seat.</p>
-            </div>
-          </div>
-          <div className="perk-box">
-            <div className="perk-icon-wrap">
-              <ShieldCheck size={22} className="icon-amber" />
-            </div>
-            <div className="perk-text">
-              <h4>Real-Time 5-Min Seat Hold</h4>
-              <p>Reserved seats are locked exclusively for you during checkout with zero double booking.</p>
-            </div>
-          </div>
-          <div className="perk-box">
-            <div className="perk-icon-wrap">
-              <QrCode size={22} className="icon-crimson" />
-            </div>
-            <div className="perk-text">
-              <h4>Instant Digital M-Ticket</h4>
-              <p>Contactless door entry validation and concessions pickup pass right on your phone.</p>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* MODALS */}
@@ -484,6 +503,13 @@ export default function CustomerDashboard() {
       {activeModal === "trailer" && selectedMovie && (
         <TrailerModal
           movie={selectedMovie}
+          onClose={handleCloseModal}
+        />
+      )}
+
+      {/* 8. Exclusive Offers & Discounts Modal */}
+      {activeModal === "offers" && (
+        <OffersModal
           onClose={handleCloseModal}
         />
       )}

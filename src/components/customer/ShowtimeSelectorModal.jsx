@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   X,
   Calendar,
@@ -13,7 +13,12 @@ import {
   Utensils,
   Smartphone,
 } from "lucide-react";
-import { getShowsForMovie, getTheatres } from "../../services/customerBookingService";
+import {
+  getShowsForMovie,
+  getTheatres,
+  getFavoriteTheatres,
+  toggleFavoriteTheatre,
+} from "../../services/customerBookingService";
 
 const TIME_FILTERS = [
   { id: "ALL", label: "All Timings" },
@@ -57,14 +62,12 @@ export default function ShowtimeSelectorModal({
   const [selectedDate, setSelectedDate] = useState(dateOptions[0].dateStr);
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("ALL");
   const [selectedFormatFilter, setSelectedFormatFilter] = useState("ALL");
-  const [favTheatres, setFavTheatres] = useState({});
+  const [favTheatres, setFavTheatres] = useState(() => getFavoriteTheatres());
 
   // Toggle favorite theatre
   const toggleFav = (theatreId) => {
-    setFavTheatres((prev) => ({
-      ...prev,
-      [theatreId]: !prev[theatreId],
-    }));
+    const updated = toggleFavoriteTheatre(theatreId);
+    setFavTheatres(updated);
   };
 
   // Retrieve shows grouped by theatre for selected movie, city, and date

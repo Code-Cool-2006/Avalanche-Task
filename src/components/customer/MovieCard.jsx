@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Clock, Ticket, Play, Info, Heart } from "lucide-react";
+import {
+  isMovieInWatchlist,
+  toggleWatchlistMovie,
+} from "../../services/customerBookingService";
 
 export default function MovieCard({
   movie,
@@ -7,7 +11,21 @@ export default function MovieCard({
   onBookTickets,
   onWatchTrailer,
 }) {
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(() => isMovieInWatchlist(movie.id));
+
+  useEffect(() => {
+    const handleSync = () => {
+      setIsLiked(isMovieInWatchlist(movie.id));
+    };
+    window.addEventListener("cine_watchlist_updated", handleSync);
+    return () => window.removeEventListener("cine_watchlist_updated", handleSync);
+  }, [movie.id]);
+
+  const handleToggleLike = (e) => {
+    e.stopPropagation();
+    const nextState = toggleWatchlistMovie(movie.id);
+    setIsLiked(nextState);
+  };
 
   return (
     <div className="movie-card-container">
@@ -32,10 +50,7 @@ export default function MovieCard({
         <button
           type="button"
           className={`btn-poster-heart ${isLiked ? "liked" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
+          onClick={handleToggleLike}
           title={isLiked ? "Remove from Watchlist" : "Add to Watchlist"}
           aria-label="Wishlist movie"
         >

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Film,
   MapPin,
@@ -8,7 +8,6 @@ import {
   ChevronDown,
   Sparkles,
   Star,
-  ExternalLink,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
@@ -22,16 +21,23 @@ export default function CustomerNavbar({
   bookingsCount,
   onOpenMyBookings,
   onSelectMovieDirect,
+  onSelectFilter,
+  onOpenOffers,
 }) {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const { user, logout } = useAuth();
 
-  // Suggestions for live search dropdown
+  // Suggestions for live search dropdown matching title, genre, director, or cast
   const searchSuggestions = searchQuery.trim().length >= 1
-    ? INITIAL_MOVIES.filter((m) =>
-        m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.genre.some((g) => g.toLowerCase().includes(searchQuery.toLowerCase()))
-      ).slice(0, 4)
+    ? INITIAL_MOVIES.filter((m) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          m.title.toLowerCase().includes(q) ||
+          m.genre?.some((g) => g.toLowerCase().includes(q)) ||
+          m.director?.toLowerCase().includes(q) ||
+          m.cast?.some((c) => c.name.toLowerCase().includes(q))
+        );
+      }).slice(0, 4)
     : [];
 
   return (
@@ -64,7 +70,7 @@ export default function CustomerNavbar({
                 setShowSearchDropdown(true);
               }}
               onFocus={() => setShowSearchDropdown(true)}
-              placeholder="Search for Movies, Events, Plays, Sports and Activities..."
+              placeholder="Search for Movies by title, genre, director, or cast..."
               className="search-input-field"
             />
             {searchQuery && (
@@ -170,41 +176,29 @@ export default function CustomerNavbar({
         </div>
       </div>
 
-      {/* Secondary BookMyShow Navigation Tier */}
+      {/* Secondary Cinema Category Navigation Tier */}
       <nav className="navbar-secondary-tier">
         <div className="secondary-nav-container">
           <div className="secondary-nav-left">
-            <a href="#movies" className="secondary-nav-link active">
+            <button
+              type="button"
+              className="secondary-nav-btn active"
+              onClick={() => onSelectFilter && onSelectFilter("NOW_SHOWING")}
+            >
               Movies
-            </a>
-            <a href="#stream" className="secondary-nav-link">
-              Stream
-              <span className="tag-new">NEW</span>
-            </a>
-            <a href="#events" className="secondary-nav-link">
-              Events
-            </a>
-            <a href="#plays" className="secondary-nav-link">
-              Plays
-            </a>
-            <a href="#sports" className="secondary-nav-link">
-              Sports
-            </a>
-            <a href="#activities" className="secondary-nav-link">
-              Activities
-            </a>
-            <a href="#buzz" className="secondary-nav-link">
-              Buzz
-            </a>
+            </button>
           </div>
 
           <div className="secondary-nav-right">
-            <span className="secondary-link-item">
-              <Sparkles size={13} className="icon-amber" />
-              Offers
-            </span>
-            <span className="secondary-link-item">Gift Cards</span>
-            <span className="secondary-link-item">Corporates</span>
+            <button
+              type="button"
+              className="secondary-offers-btn"
+              onClick={onOpenOffers}
+              title="View available discount coupon codes"
+            >
+              <Sparkles size={14} className="icon-amber" />
+              <span>Offers & Promos</span>
+            </button>
           </div>
         </div>
       </nav>
