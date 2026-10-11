@@ -42,9 +42,10 @@ export default function CustomerNavbar({
   return (
     <header className="customer-navbar-header">
       <div className="navbar-container">
-        {/* Brand Logo: CINESHOW in Red Serif */}
+        {/* Brand Logo: BIO CINESHOW in Heritage Nordic Style */}
         <div className="navbar-brand" onClick={() => onSelectFilter && onSelectFilter("NOW_SHOWING")}>
-          <span className="brand-logo-text">CINESHOW</span>
+          <span className="brand-logo-text">BIO CINESHOW</span>
+          <span className="brand-sub-badge">1926</span>
         </div>
 
         {/* Center Navigation Links & Integrated Search */}

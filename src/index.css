@@ -1,8 +1,9 @@
 @import "./styles/tokens.css";
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=Righteous&display=swap');
+@import "./styles/nordic-theme.css";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 /* =========================================================
-   CINESHOW — BOOKMYSHOW INSPIRED PREMIER CINEMA DESIGN SYSTEM
+   CINESHOW — NORDIC ARTHOUSE CINEMA DESIGN SYSTEM
    ========================================================= */
 
 :root {
@@ -10,47 +11,47 @@
   --font-display: var(--font-serif);
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Cinema Crimson Palette from Tokens */
-  --bms-primary: var(--color-primary, #dc2626);
-  --bms-primary-hover: var(--color-primary-hover, #b91c1c);
-  --bms-gradient: linear-gradient(135deg, var(--color-primary, #dc2626) 0%, var(--color-primary-hover, #b91c1c) 100%);
-  --bms-glow: var(--shadow-glow, rgba(220, 38, 38, 0.35));
-  --icon-crimson: var(--color-primary, #dc2626);
-  --bms-dark-card: var(--bg-card, #14141c);
-  --bms-dark-surface: var(--bg-sidebar, #0f0f15);
-  --bms-border: var(--border-medium, #262736);
+  /* Nordic Charcoal & Cognac Palette */
+  --bms-primary: var(--color-primary, #222226);
+  --bms-primary-hover: var(--color-primary-hover, #111113);
+  --bms-gradient: linear-gradient(135deg, #222226 0%, #111113 100%);
+  --bms-glow: var(--shadow-glow, rgba(194, 120, 47, 0.2));
+  --icon-crimson: var(--color-accent-amber, #c2782f);
+  --bms-dark-card: var(--bg-card, #ffffff);
+  --bms-dark-surface: var(--bg-sidebar, #f3efe6);
+  --bms-border: var(--border-medium, #d8d0c2);
 
-  /* Cinema Midnight Palette from Tokens */
-  --bg-app: var(--bg-page, #0a0a0e);
-  --bg-surface-1: var(--bg-sidebar, #0f0f15);
-  --bg-surface-2: var(--bg-card, #14141c);
-  --bg-surface-3: #1a1a26;
-  --bg-surface-card: var(--bg-card, #14141c);
+  /* Nordic Cream Paper Canvas */
+  --bg-app: var(--bg-page, #f9f6f0);
+  --bg-surface-1: var(--bg-sidebar, #f3efe6);
+  --bg-surface-2: var(--bg-card, #ffffff);
+  --bg-surface-3: #f7f3eb;
+  --bg-surface-card: var(--bg-card, #ffffff);
 
   /* Borders & Dividers */
-  --border-subtle: var(--border-subtle, #1c1d27);
-  --border-medium: var(--border-medium, #262736);
-  --border-active: var(--color-primary, #dc2626);
+  --border-subtle: var(--border-subtle, #eae4d8);
+  --border-medium: var(--border-medium, #d8d0c2);
+  --border-active: var(--color-accent-amber, #c2782f);
 
   /* Accents */
-  --amber-primary: #f59e0b;
-  --amber-glow: rgba(245, 158, 11, 0.25);
-  --cyan-primary: #06b6d4;
-  --cyan-glow: rgba(6, 182, 212, 0.2);
-  --purple-primary: #a855f7;
-  --emerald-primary: #10b981;
-  --rose-primary: #f43f5e;
+  --amber-primary: #c2782f;
+  --amber-glow: rgba(194, 120, 47, 0.2);
+  --cyan-primary: #607d9b;
+  --cyan-glow: rgba(96, 125, 155, 0.2);
+  --purple-primary: #8b7355;
+  --emerald-primary: #3d7a5a;
+  --rose-primary: #b85244;
 
   /* Text Colors */
-  --text-white: #ffffff;
-  --text-heading: #f3f4f6;
-  --text-body: #9ca3af;
-  --text-muted: #6b7280;
+  --text-white: #18181b;
+  --text-heading: #18181b;
+  --text-body: #524f4a;
+  --text-muted: #847e74;
 
   /* Tiers Colors */
-  --tier-recliner: #f59e0b;
-  --tier-premium: #a855f7;
-  --tier-regular: #06b6d4;
+  --tier-recliner: #c2782f;
+  --tier-premium: #8b7355;
+  --tier-regular: #dfd9ce;
 }
 
 * {
@@ -2976,8 +2977,8 @@ html, body {
 /* Date Selector Pills */
 .showtimes-date-pills-bar {
   padding: 14px 24px;
-  background: #080d1a;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ede7da;
+  border-bottom: 1px solid #d8d0c2;
   flex-shrink: 0;
 }
 
@@ -2999,67 +3000,78 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
-  min-width: 68px;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 16px;
+  min-width: 72px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1.5px solid #d4ccbd;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 5px rgba(30, 20, 10, 0.06);
+  transition: all 0.18s ease-in-out;
 }
 
 .date-pill:hover {
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(6, 182, 212, 0.4);
+  background: #fdfbf7;
+  border-color: #222226;
   transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(30, 20, 10, 0.12);
+}
+
+.date-pill:hover .date-pill-day,
+.date-pill:hover .date-pill-num,
+.date-pill:hover .date-pill-month {
+  color: #111113;
 }
 
 .date-pill.active {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(37, 99, 235, 0.25));
-  border-color: #06b6d4;
-  box-shadow: 0 0 16px rgba(6, 182, 212, 0.3);
+  background: #222226;
+  border-color: #222226;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.28);
+  transform: translateY(-1px);
 }
 
 .date-pill-day {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 800;
   text-transform: uppercase;
-  color: #64748b;
-  letter-spacing: 0.04em;
+  color: #3f3c37;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
 }
 
 .date-pill.active .date-pill-day {
-  color: #38bdf8;
+  color: #e5ded2;
 }
 
 .date-pill-num {
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: #111113;
   line-height: 1.1;
   margin: 3px 0 1px;
 }
 
 .date-pill.active .date-pill-num {
-  color: #fff;
+  color: #ffffff;
 }
 
 .date-pill-month {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #94a3b8;
-  text-transform: capitalize;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #3f3c37;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .date-pill.active .date-pill-month {
-  color: #7dd3fc;
+  color: #c2782f;
 }
 
 /* Filter Controls Row */
 .showtimes-filters-row {
   padding: 12px 24px;
-  background: #0b1329;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #faf7f2;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8);
   display: flex;
   align-items: center;
   gap: 24px;
@@ -3074,11 +3086,11 @@ html, body {
 }
 
 .filter-label {
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
+  letter-spacing: 0.06em;
+  color: #847e74;
 }
 
 .filter-pills-wrap {
@@ -3089,41 +3101,42 @@ html, body {
 }
 
 .subfilter-pill {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid var(--border-medium, #d8d0c2);
+  border-radius: 4px;
   padding: 5px 12px;
-  color: #94a3b8;
+  color: #524f4a;
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.03);
   transition: all 0.15s ease;
 }
 
 .subfilter-pill:hover {
-  background: rgba(30, 41, 59, 0.9);
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: #f7f3eb;
+  color: #18181b;
+  border-color: #222226;
 }
 
 .subfilter-pill.active {
-  background: rgba(6, 182, 212, 0.18);
-  border-color: #06b6d4;
-  color: #38bdf8;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+  background: #222226;
+  border-color: #222226;
+  color: #ffffff;
+  box-shadow: none;
 }
 
 /* Legend Strip */
 .showtimes-legend-bar {
   padding: 10px 24px;
-  background: rgba(8, 13, 26, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f3efe6;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8);
   display: flex;
   align-items: center;
   gap: 20px;
   flex-shrink: 0;
   font-size: 0.74rem;
-  color: #94a3b8;
+  color: #524f4a;
 }
 
 .legend-item {
@@ -3464,22 +3477,22 @@ html, body {
 .no-shows-found-state h3 {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #fff;
+  color: #18181b;
 }
 
 .no-shows-found-state p {
-  color: #94a3b8;
+  color: #524f4a;
   font-size: 0.86rem;
   max-width: 380px;
 }
 
 .btn-reset-filters {
   margin-top: 8px;
-  background: rgba(6, 182, 212, 0.15);
-  border: 1px solid #06b6d4;
-  color: #38bdf8;
+  background: #222226;
+  border: 1px solid #222226;
+  color: #ffffff;
   padding: 8px 18px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
@@ -3487,8 +3500,8 @@ html, body {
 }
 
 .btn-reset-filters:hover {
-  background: #06b6d4;
-  color: #000;
+  background: #111113;
+  border-color: #111113;
 }
 
 /* 7. SEAT SELECTION MODAL */
@@ -3989,23 +4002,26 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(20, 30, 51, 0.8);
-  border: 1px solid var(--border-medium);
+  background: #ffffff;
+  border: 1px solid var(--border-medium, #d8d0c2);
   border-radius: 999px;
   padding: 4px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .tier-name {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-white);
+  color: #18181b;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .tier-price-tag {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   font-weight: 800;
-  color: #38bdf8;
+  color: #c2782f;
 }
 
 .seat-row-row {
@@ -8478,7 +8494,7 @@ html, body {
 /* Coming Soon Section */
 .cine-coming-soon-section {
   margin-top: 48px;
-  border-top: 1px solid var(--border-subtle, #1c1d27);
+  border-top: 1px solid var(--border-subtle, #eae4d8);
   padding-top: 32px;
 }
 
@@ -8493,7 +8509,7 @@ html, body {
   font-family: var(--font-serif);
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #18181b);
   margin: 0;
 }
 
@@ -8503,7 +8519,7 @@ html, body {
   gap: 4px;
   background: none;
   border: none;
-  color: var(--color-primary, #dc2626);
+  color: var(--text-primary, #18181b);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -8512,7 +8528,7 @@ html, body {
 
 .link-view-all:hover {
   gap: 7px;
-  color: #ef4444;
+  color: var(--color-accent-amber, #c2782f);
 }
 
 /* Empty Catalog State */
