@@ -32,11 +32,14 @@ const SEAT_COUNTS = [
 ];
 
 export default function SeatSelectionModal({
-  showId,
+  showId: propShowId,
+  show: showObj,
   showDetails,
   onClose,
   onProceedToFnb,
 }) {
+  const showId = propShowId || showObj?.id || showDetails?.show?.id;
+
   // Step 1: "How many seats?" BookMyShow pre-selector
   const [hasChosenSeatCount, setHasChosenSeatCount] = useState(false);
   const [desiredSeatCount, setDesiredSeatCount] = useState(2);

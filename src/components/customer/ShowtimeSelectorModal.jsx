@@ -30,17 +30,23 @@ const TIME_FILTERS = [
 
 export default function ShowtimeSelectorModal({
   movie,
-  selectedCity,
+  selectedCity: propSelectedCity,
+  city,
   onClose,
   onSelectShow,
 }) {
+  const selectedCity = propSelectedCity || city;
+
   // Generate 7 upcoming dates starting from today
   const dateOptions = useMemo(() => {
     const list = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
-      const isoDateStr = d.toISOString().split("T")[0];
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${y}-${m}-${day}`;
       const dayName =
         i === 0
           ? "Today"
@@ -50,7 +56,7 @@ export default function ShowtimeSelectorModal({
       const dayNum = d.toLocaleDateString("en-US", { day: "numeric" });
       const monthShort = d.toLocaleDateString("en-US", { month: "short" });
       list.push({
-        dateStr: isoDateStr,
+        dateStr,
         dayName,
         dayNum,
         monthShort,

@@ -1,0 +1,83 @@
+/**
+ * Design Tokens - CineShow
+ * Centralized design tokens for colors, typography, borders, and spacing.
+ * Easily customize the theme by editing these CSS variables.
+ */
+
+:root {
+  /* ==========================================================================
+     Brand & Accent Colors
+     ========================================================================== */
+  --color-primary: #dc2626;              /* Vivid cinematic crimson red */
+  --color-primary-hover: #b91c1c;        /* Darker crimson on hover */
+  --color-primary-active: #991b1b;       /* Pressed state */
+  --color-primary-subtle: rgba(220, 38, 38, 0.12); /* Translucent red tint */
+  --color-primary-glow: rgba(220, 38, 38, 0.35);   /* Focus/Glow shadows */
+
+  --color-accent-teal: #06b6d4;          /* IMAX / Premium format teal badge */
+  --color-accent-amber: #f59e0b;         /* Rating star & warning amber */
+  --color-accent-gold: #fbbf24;
+
+  /* ==========================================================================
+     Backgrounds & Surfaces
+     ========================================================================== */
+  --bg-page: #0a0a0e;                    /* Deep matte black page background */
+  --bg-navbar: #0a0a0e;                  /* Top navigation bar background */
+  --bg-sidebar: #0f0f15;                 /* Left filter sidebar background */
+  --bg-card: #14141c;                    /* Movie card background */
+  --bg-card-hover: #191a24;              /* Card hover state */
+  --bg-surface-elevated: #1a1a24;        /* Modals and popovers background */
+  --bg-input: #12131a;                   /* Input fields and search bar */
+
+  --bg-pill-active: #dc2626;             /* Active filter pill */
+  --bg-pill-inactive: #171822;           /* Inactive filter pill */
+  --bg-pill-hover: #222330;              /* Inactive filter pill hover */
+
+  --bg-badge-dark: rgba(10, 10, 14, 0.82); /* Over-poster translucent badge */
+
+  /* ==========================================================================
+     Borders & Dividers
+     ========================================================================== */
+  --border-subtle: #1c1d27;              /* Thin dividers & separators */
+  --border-medium: #262736;              /* Card & button outlines */
+  --border-focus: #dc2626;               /* Active input/button outline */
+
+  /* ==========================================================================
+     Typography
+     ========================================================================== */
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* ==========================================================================
+     Text Colors
+     ========================================================================== */
+  --text-primary: #ffffff;               /* High-contrast headings and titles */
+  --text-secondary: #9ca3af;             /* Body text and subtitles */
+  --text-muted: #6b7280;                 /* Labels, metadata, and timestamps */
+  --text-dimmed: #4b5563;                /* Inactive icons and placeholders */
+
+  /* ==========================================================================
+     Border Radii
+     ========================================================================== */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;                 /* Fully rounded pills */
+
+  /* ==========================================================================
+     Elevation & Shadows
+     ========================================================================== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: 0 14px 40px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 25px rgba(220, 38, 38, 0.35);
+
+  /* ==========================================================================
+     Layout Dimensions
+     ========================================================================== */
+  --navbar-height: 68px;
+  --sidebar-width: 230px;
+}

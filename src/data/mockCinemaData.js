@@ -466,7 +466,7 @@ export const INITIAL_SCREENS = [
 ];
 
 // Generates rich show schedules for today and the next 6 days across movies & screens
-function createShows() {
+export function createShows() {
   const shows = [];
   let idCounter = 1;
 
@@ -481,28 +481,35 @@ function createShows() {
       { screenId: 1, movieId: 1, hour: 14, min: 15, reg: 280, prem: 420, recl: 600, sound: "IMAX Laser", filling: "filling" },
       { screenId: 1, movieId: 3, hour: 18, min: 0, reg: 300, prem: 450, recl: 650, sound: "IMAX 70mm", filling: "almost_full" },
       { screenId: 1, movieId: 5, hour: 21, min: 45, reg: 280, prem: 420, recl: 600, sound: "IMAX 3D", filling: "available" },
+      { screenId: 1, movieId: 7, hour: 23, min: 30, reg: 280, prem: 420, recl: 600, sound: "IMAX Laser", filling: "available" },
       
       { screenId: 2, movieId: 2, hour: 11, min: 15, reg: 220, prem: 320, recl: 480, sound: "Dolby Atmos", filling: "available" },
       { screenId: 2, movieId: 6, hour: 15, min: 30, reg: 240, prem: 350, recl: 500, sound: "Dolby 7.1", filling: "filling" },
       { screenId: 2, movieId: 4, hour: 19, min: 30, reg: 220, prem: 320, recl: 480, sound: "Dolby Atmos", filling: "available" },
+      { screenId: 2, movieId: 8, hour: 22, min: 45, reg: 240, prem: 350, recl: 500, sound: "Dolby Atmos", filling: "filling" },
 
       // Mumbai - Inorbit
+      { screenId: 3, movieId: 8, hour: 10, min: 0, reg: 320, prem: 450, recl: 650, sound: "VIP Dining", filling: "available" },
       { screenId: 3, movieId: 1, hour: 13, min: 0, reg: 320, prem: 450, recl: 650, sound: "VIP Dining", filling: "available" },
       { screenId: 3, movieId: 6, hour: 17, min: 15, reg: 350, prem: 480, recl: 700, sound: "VIP Dining", filling: "filling" },
       { screenId: 3, movieId: 2, hour: 21, min: 0, reg: 350, prem: 480, recl: 700, sound: "VIP Dining", filling: "available" },
+      { screenId: 3, movieId: 7, hour: 23, min: 30, reg: 350, prem: 480, recl: 700, sound: "VIP Dining", filling: "available" },
 
       // Delhi - Ambience
       { screenId: 4, movieId: 1, hour: 12, min: 30, reg: 350, prem: 500, recl: 750, sound: "Director's Cut", filling: "available" },
       { screenId: 4, movieId: 3, hour: 16, min: 45, reg: 400, prem: 550, recl: 800, sound: "Director's Cut", filling: "almost_full" },
       { screenId: 4, movieId: 5, hour: 20, min: 30, reg: 380, prem: 520, recl: 780, sound: "Director's Cut", filling: "filling" },
+      { screenId: 4, movieId: 7, hour: 23, min: 15, reg: 380, prem: 520, recl: 780, sound: "Director's Cut", filling: "available" },
 
       // Delhi - Saket 4DX
       { screenId: 5, movieId: 5, hour: 11, min: 45, reg: 320, prem: 450, recl: 580, sound: "4DX Motion", filling: "available" },
       { screenId: 5, movieId: 1, hour: 15, min: 30, reg: 340, prem: 480, recl: 620, sound: "4DX Motion", filling: "filling" },
       { screenId: 5, movieId: 4, hour: 19, min: 15, reg: 320, prem: 450, recl: 580, sound: "4DX Motion", filling: "available" },
+      { screenId: 5, movieId: 8, hour: 22, min: 30, reg: 340, prem: 480, recl: 620, sound: "4DX Motion", filling: "available" },
 
       // Bengaluru - Forum South
       { screenId: 6, movieId: 1, hour: 10, min: 45, reg: 260, prem: 390, recl: 580, sound: "IMAX Laser", filling: "available" },
+      { screenId: 6, movieId: 8, hour: 12, min: 45, reg: 280, prem: 420, recl: 600, sound: "IMAX Laser", filling: "available" },
       { screenId: 6, movieId: 3, hour: 14, min: 30, reg: 300, prem: 450, recl: 650, sound: "IMAX 70mm", filling: "filling" },
       { screenId: 6, movieId: 6, hour: 18, min: 15, reg: 280, prem: 420, recl: 600, sound: "IMAX 3D", filling: "almost_full" },
       { screenId: 6, movieId: 5, hour: 22, min: 0, reg: 280, prem: 420, recl: 600, sound: "IMAX 3D", filling: "available" },
@@ -511,11 +518,14 @@ function createShows() {
       { screenId: 7, movieId: 2, hour: 13, min: 15, reg: 200, prem: 300, recl: 450, sound: "Dolby 7.1", filling: "available" },
       { screenId: 7, movieId: 4, hour: 17, min: 0, reg: 200, prem: 300, recl: 450, sound: "Dolby 7.1", filling: "filling" },
       { screenId: 7, movieId: 7, hour: 20, min: 30, reg: 220, prem: 320, recl: 480, sound: "Dolby Atmos", filling: "available" },
+      { screenId: 7, movieId: 8, hour: 23, min: 15, reg: 220, prem: 320, recl: 480, sound: "Dolby 7.1", filling: "available" },
 
       // Hyderabad - Prasads
+      { screenId: 8, movieId: 8, hour: 9, min: 30, reg: 250, prem: 380, recl: 550, sound: "Large Screen", filling: "available" },
       { screenId: 8, movieId: 6, hour: 11, min: 0, reg: 250, prem: 380, recl: 550, sound: "Large Screen", filling: "filling" },
       { screenId: 8, movieId: 1, hour: 15, min: 0, reg: 280, prem: 420, recl: 600, sound: "Large Screen", filling: "almost_full" },
       { screenId: 8, movieId: 3, hour: 19, min: 0, reg: 300, prem: 450, recl: 650, sound: "Large Screen", filling: "filling" },
+      { screenId: 8, movieId: 7, hour: 22, min: 45, reg: 280, prem: 420, recl: 600, sound: "Large Screen", filling: "available" },
 
       // San Francisco & San Jose
       { screenId: 9, movieId: 1, hour: 14, min: 0, reg: 18, prem: 26, recl: 38, sound: "IMAX Laser", filling: "available" },
@@ -525,8 +535,7 @@ function createShows() {
     ];
 
     for (const item of dayShows) {
-      const showDate = new Date(d);
-      showDate.setHours(item.hour, item.min, 0, 0);
+      const showDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), item.hour, item.min, 0, 0);
 
       shows.push({
         id: idCounter++,

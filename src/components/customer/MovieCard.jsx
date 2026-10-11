@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, Clock, Ticket, Play, Info, Heart } from "lucide-react";
+import { Star, Ticket, Play, Info, Heart } from "lucide-react";
 import {
   isMovieInWatchlist,
   toggleWatchlistMovie,
@@ -27,9 +27,11 @@ export default function MovieCard({
     setIsLiked(nextState);
   };
 
+  const isImax = movie.formats?.some((f) => f.toUpperCase().includes("IMAX"));
+
   return (
     <div className="movie-card-container">
-      {/* Poster with hover overlay */}
+      {/* Poster Wrap with badges & hover overlay */}
       <div className="movie-poster-wrap" onClick={() => onOpenDetail(movie)}>
         <img
           src={movie.poster_url}
@@ -38,12 +40,10 @@ export default function MovieCard({
           loading="lazy"
         />
 
-        {/* Top Badges */}
+        {/* Top Badges: Certificate on left, IMAX on right */}
         <div className="poster-top-badges">
-          <span className="badge-cert">{movie.certificate || "U/A"}</span>
-          {movie.formats && movie.formats.length > 0 && (
-            <span className="badge-format-pill">{movie.formats[0]}</span>
-          )}
+          <span className="badge-cert">{movie.certificate || "U/A 13+"}</span>
+          {isImax && <span className="badge-imax">IMAX</span>}
         </div>
 
         {/* Favorite Heart Button */}
@@ -54,17 +54,8 @@ export default function MovieCard({
           title={isLiked ? "Remove from Watchlist" : "Add to Watchlist"}
           aria-label="Wishlist movie"
         >
-          <Heart size={15} fill={isLiked ? "#f84464" : "none"} />
+          <Heart size={14} fill={isLiked ? "#dc2626" : "none"} />
         </button>
-
-        {/* BookMyShow Rating Strip on Poster */}
-        <div className="poster-rating-strip">
-          <div className="rating-left">
-            <Star size={13} className="star-icon-filled" />
-            <span className="rating-num">{movie.rating}/10</span>
-          </div>
-          <span className="rating-votes">{movie.votes || "100K"} Votes</span>
-        </div>
 
         {/* Hover action overlay */}
         <div className="poster-hover-overlay">
@@ -79,7 +70,7 @@ export default function MovieCard({
               title="Watch Trailer"
               aria-label="Play trailer"
             >
-              <Play size={18} />
+              <Play size={18} fill="#fff" />
             </button>
           )}
 
@@ -99,24 +90,26 @@ export default function MovieCard({
 
       {/* Card Info */}
       <div className="movie-card-info">
+        {/* Rating row: Star 8.8/10 + 412K votes */}
+        <div className="card-rating-row">
+          <span className="rating-star-group">
+            <Star size={13} className="star-gold" fill="#f59e0b" />
+            <strong className="rating-score">{movie.rating || "8.5"}/10</strong>
+          </span>
+          <span className="rating-vote-count">{movie.votes || "250K"} votes</span>
+        </div>
+
+        {/* Title */}
         <h3 className="movie-card-title" onClick={() => onOpenDetail(movie)}>
           {movie.title}
         </h3>
 
-        <div className="movie-card-meta-line">
-          <span className="meta-genre">{movie.genre?.slice(0, 2).join(", ")}</span>
-          <span className="meta-bullet">•</span>
-          <span className="meta-duration">
-            <Clock size={11} /> {movie.duration_min}m
-          </span>
-        </div>
+        {/* Genre line: Action • Drama • Sci-Fi */}
+        <p className="movie-card-genres">
+          {movie.genre?.join(" • ") || "Action • Drama"}
+        </p>
 
-        {/* Language list */}
-        <div className="movie-card-languages">
-          <span>{movie.languagesAvailable ? movie.languagesAvailable.slice(0, 3).join(", ") : movie.language}</span>
-        </div>
-
-        {/* Book Tickets CTA */}
+        {/* Book Tickets CTA Button */}
         <button
           type="button"
           className="btn-card-book-action"
