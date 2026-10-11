@@ -1,7 +1,6 @@
 import express from "express";
 import {
   getSeatsByScreen,
-  createSeatForScreen,
   updateSeat,
   deleteSeat,
 } from "../controllers/seatController.js";
@@ -17,13 +16,7 @@ const router = express.Router();
  // GET ALL SEATS FOR A SCREEN — public
 router.get("/screens/:screenId/seats", getSeatsByScreen);
 
-// CREATE SEAT FOR A SCREEN — admin only
-router.post(
-  "/screens/:screenId/seats/create",
-  requireAuth,
-  requireAdmin,
-  createSeatForScreen
-);
+
 
 // UPDATE SEAT — admin only
 router.put(

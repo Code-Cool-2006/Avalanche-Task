@@ -95,7 +95,7 @@ POST http://localhost:4000/screens/create
 Content-Type: application/json
 
 {
-    "theatre_id": 1,
+    "theatre_id": 3,
     "name": "Screen 1"
 }
 

@@ -21,36 +21,7 @@ export const getSeatsByScreen = async (req, res) => {
 
 const VALID_TIERS = ["regular", "premium", "recliner"];
 
-// CREATE SEAT FOR A SCREEN
-export const createSeatForScreen = async (req, res) => {
-  try {
-    const { screenId } = req.params;
-    const { row_label, seat_number, tier } = req.body;
 
-    if (!row_label || !seat_number) {
-      return res.status(400).json({
-        message: "Row label and Seat number are required",
-      });
-    }
-
-    const seatTier = (tier || "regular").toLowerCase();
-    if (!VALID_TIERS.includes(seatTier)) {
-      return res.status(400).json({
-        message: `Invalid tier '${tier}'. Allowed: ${VALID_TIERS.join(", ")}`,
-      });
-    }
-
-    const result = await pool.query(
-      "INSERT INTO seats (screen_id, row_label, seat_number, tier) VALUES ($1, $2, $3, $4) RETURNING *",
-      [screenId, row_label, seat_number, seatTier]
-    );
-
-    return res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error("Error creating seat:", error.message);
-    return res.status(500).json({ message: "Failed to create seat" });
-  }
-};
 
 // UPDATE SEAT
 export const updateSeat = async (req, res) => {
