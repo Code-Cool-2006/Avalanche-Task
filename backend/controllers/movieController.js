@@ -49,27 +49,24 @@ export const createMovie = async (req, res) => {
     const parsedDuration = duration_min !== undefined && duration_min !== null ? Math.round(Number(duration_min)) : null;
     const parsedRating = rating !== undefined && rating !== null ? Math.round(Number(rating)) : null;
 
-    const result = await pool.query(
-      `INSERT INTO movies
-      (title, description, genre, language, duration_min, rating,
-       poster_url, trailer_url, release_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      RETURNING *`,
-      [
-        title,
-        description,
-        genre,
-        language,
-        parsedDuration,
-        parsedRating,
-        poster_url,
-        trailer_url,
-        release_date,
-        title, description, genre, language, duration_min,
-        rating, poster_url, trailer_url, release_date
-      ]
-    );
-
+const result = await pool.query(
+  `INSERT INTO movies
+  (title, description, genre, language, duration_min, rating,
+   poster_url, trailer_url, release_date)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+  RETURNING *`,
+  [
+    title,
+    description,
+    genre,
+    language,
+    parsedDuration,
+    parsedRating,
+    poster_url,
+    trailer_url,
+    release_date
+  ]
+);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error("Error Creating Movie:", error.message);
@@ -105,19 +102,16 @@ export const updateMovie = async (req, res) => {
        WHERE id = $10
        RETURNING *`,
       [
-        title,
-        description,
-        genre,
-        language,
-        parsedDuration,
-        parsedRating,
-        poster_url,
-        trailer_url,
-        release_date,
-        id,
-        title, description, release_date, genre, language,
-        duration_min, rating, poster_url, trailer_url, id
-      ]
+     title,
+    description,
+    release_date,
+    genre,
+    language,
+    parsedDuration,
+    parsedRating,
+    poster_url,
+    trailer_url,
+    id]
     );
 
     if (result.rows.length === 0) {

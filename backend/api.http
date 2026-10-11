@@ -17,7 +17,7 @@ Content-Type: application/json
 
 
 {
-    "title": "Inception",
+    "title": "Demo",
     "description": "A thief enters the dreams of others to steal secrets.",
     "genre": "Sci-Fi",
     "language": "English",
@@ -95,7 +95,7 @@ POST http://localhost:4000/screens/create
 Content-Type: application/json
 
 {
-    "theatre_id": 1,
+    "theatre_id": 3,
     "name": "Screen 1"
 }
 
@@ -157,17 +157,14 @@ POST http://localhost:4000/api/shows
 Content-Type: application/json
 
 {
-  "movie_id": 1,
-  "screen_id": 2,
+  "movie_id": 9,
+  "screen_id": 10,
   "start_time": "2026-12-20T18:30:00",
   "price_regular": 150,
   "price_premium": 220,
   "price_recliner": 350
 }
 
-
-### 4. GET SEATS FOR SCREEN 1
-GET http://localhost:4000/screens/1/seats
 
 
 
@@ -240,8 +237,8 @@ POST http://localhost:4000/api/bookings
 Content-Type: application/json
 
 {
-  "show_id": 3,
-  "seat_ids": [8]
+  "show_id": 5,
+  "seat_ids": [19]
 }
 
 
@@ -268,7 +265,7 @@ POST http://localhost:4000/api/payments
 Content-Type: application/json
 
 {
-  "booking_id": 3
+  "booking_id": 4
 }
 
 
@@ -280,3 +277,21 @@ GET http://localhost:4000/api/payments/booking/3
 ###
 GET http://localhost:4000/api/admin/movies
 Content-Type: application/json
+
+
+### CREATE MOVIE
+POST http://localhost:4000/movies/create
+Content-Type: application/json
+
+
+{
+    "title": "Demo",
+    "description": "A thief enters the dreams of others to steal secrets.",
+    "genre": "Sci-Fi",
+    "language": "English",
+    "duration_min": 148,
+    "rating": 5,
+    "poster_url": "https://static1.srcdn.com/wordpress/wp-content/uploads/2020/01/Inception-Movie-Poster.jpg",
+    "trailer_url": "https://www.bing.com/videos/riverview/relatedvideo?q=inception&&mid=594F8B54EBE4BB4C9687594F8B54EBE4BB4C9687&churl=https%3a%2f%2fwww.youtube.com%2fchannel%2fUCTCjFFoX1un-j7ni4B6HJ3Q&FORM=VRDGAR",
+    "release_date": "2010-07-16"
+}
