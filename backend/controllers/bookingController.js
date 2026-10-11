@@ -1,6 +1,7 @@
 
 import crypto from "node:crypto";
 import { pool } from "../config/db.js";
+import { generateTicketPdf } from "../services/ticketService.js";
 
 // CREATE A BOOKING
 export const createBooking = async (req, res) => {
@@ -352,3 +353,5 @@ export const getAllBookings = async (req, res) => {
     return res.status(500).json({ message: "Failed to fetch all bookings." });
   }
 };
+
+

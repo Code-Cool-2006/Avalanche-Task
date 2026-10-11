@@ -121,7 +121,7 @@ Content-Type: application/json
 
 {
     "row_label": "A",
-    "seat_number": 2,
+    "seat_number": 3,
     "tier": "regular"
 }
 
@@ -268,22 +268,14 @@ POST http://localhost:4000/api/payments
 Content-Type: application/json
 
 {
-  "booking_id": 2
+  "booking_id": 3
 }
 
 
 ### GET PAYMENT DETAILS
-GET http://localhost:4000/api/payments/booking/1
+GET http://localhost:4000/api/payments/booking/3
 
 
-
-### CREATE RAZORPAY ORDER
-POST http://localhost:4000/api/payments
-Content-Type: application/json
-
-{
-  "booking_id": 2
-}
 
 ###
 GET http://localhost:4000/api/admin/movies
