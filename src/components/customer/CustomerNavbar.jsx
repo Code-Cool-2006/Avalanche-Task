@@ -1,14 +1,12 @@
 import { useState } from "react";
 import {
-  Film,
   MapPin,
   Search,
   Ticket,
-  User,
   ChevronDown,
-  Sparkles,
   Star,
   LogOut,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
@@ -27,7 +25,8 @@ export default function CustomerNavbar({
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const { user, logout } = useAuth();
 
-  // Suggestions for live search dropdown matching title, genre, director, or cast
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "V";
+
   const searchSuggestions = searchQuery.trim().length >= 1
     ? INITIAL_MOVIES.filter((m) => {
         const q = searchQuery.toLowerCase();
@@ -42,102 +41,114 @@ export default function CustomerNavbar({
 
   return (
     <header className="customer-navbar-header">
-      {/* Top Primary Navigation */}
       <div className="navbar-container">
-        {/* Brand Logo */}
-        <div className="navbar-brand">
-          <div className="brand-logo-icon">
-            <Film size={22} className="logo-reel" />
-          </div>
-          <div className="brand-text-wrap">
-            <div className="brand-title-row">
-              <span className="brand-title">CINESHOW</span>
-              <span className="bms-indicator-badge">BMS</span>
-            </div>
-            <span className="brand-subtitle">CINEMA TICKETS & EXPERIENCES</span>
-          </div>
+        {/* Brand Logo: CINESHOW in Red Serif */}
+        <div className="navbar-brand" onClick={() => onSelectFilter && onSelectFilter("NOW_SHOWING")}>
+          <span className="brand-logo-text">CINESHOW</span>
         </div>
 
-        {/* Live Search Bar with Instant Autocomplete */}
-        <div className="navbar-search-bar-wrapper">
-          <div className="navbar-search-bar">
-            <Search size={16} className="search-icon" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                onSearchChange(e.target.value);
-                setShowSearchDropdown(true);
-              }}
-              onFocus={() => setShowSearchDropdown(true)}
-              placeholder="Search for Movies by title, genre, director, or cast..."
-              className="search-input-field"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="btn-clear-search"
-                onClick={() => {
-                  onSearchChange("");
-                  setShowSearchDropdown(false);
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-
-          {/* Autocomplete Dropdown */}
-          {showSearchDropdown && searchSuggestions.length > 0 && (
-            <div
-              className="search-suggestions-dropdown"
-              onMouseLeave={() => setShowSearchDropdown(false)}
+        {/* Center Navigation Links & Integrated Search */}
+        <nav className="navbar-center-nav">
+          <button
+            type="button"
+            className="nav-link-item active"
+            onClick={() => onSelectFilter && onSelectFilter("NOW_SHOWING")}
+          >
+            Movies
+          </button>
+          {onOpenOffers && (
+            <button
+              type="button"
+              className="nav-link-item nav-offers-link"
+              onClick={onOpenOffers}
+              title="View Offers & Promos"
             >
-              <div className="suggestions-header">Quick Movie Matches</div>
-              {searchSuggestions.map((movie) => (
-                <div
-                  key={movie.id}
-                  className="suggestion-item"
+              <Sparkles size={13} className="text-amber" />
+              <span>Offers</span>
+            </button>
+          )}
+
+          {/* Sleek inline search bar */}
+          <div className="navbar-search-bar-wrapper">
+            <div className="navbar-search-bar">
+              <Search size={15} className="search-icon" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
+                onFocus={() => setShowSearchDropdown(true)}
+                placeholder="Search movies, genres, cast..."
+                className="search-input-field"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="btn-clear-search"
                   onClick={() => {
+                    onSearchChange("");
                     setShowSearchDropdown(false);
-                    if (onSelectMovieDirect) onSelectMovieDirect(movie);
                   }}
                 >
-                  <img
-                    src={movie.poster_url}
-                    alt={movie.title}
-                    className="suggestion-poster"
-                  />
-                  <div className="suggestion-info">
-                    <span className="suggestion-title">{movie.title}</span>
-                    <div className="suggestion-meta">
-                      <span className="meta-rating">
-                        <Star size={11} className="star-filled" /> {movie.rating}
-                      </span>
-                      <span>•</span>
-                      <span>{movie.genre.slice(0, 2).join(", ")}</span>
-                      <span>•</span>
-                      <span className="suggestion-cert">{movie.certificate}</span>
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Live Autocomplete Dropdown */}
+            {showSearchDropdown && searchSuggestions.length > 0 && (
+              <div
+                className="search-suggestions-dropdown"
+                onMouseLeave={() => setShowSearchDropdown(false)}
+              >
+                <div className="suggestions-header">Quick Movie Matches</div>
+                {searchSuggestions.map((movie) => (
+                  <div
+                    key={movie.id}
+                    className="suggestion-item"
+                    onClick={() => {
+                      setShowSearchDropdown(false);
+                      if (onSelectMovieDirect) onSelectMovieDirect(movie);
+                    }}
+                  >
+                    <img
+                      src={movie.poster_url}
+                      alt={movie.title}
+                      className="suggestion-poster"
+                    />
+                    <div className="suggestion-info">
+                      <span className="suggestion-title">{movie.title}</span>
+                      <div className="suggestion-meta">
+                        <span className="meta-rating">
+                          <Star size={11} fill="#f59e0b" color="#f59e0b" /> {movie.rating}
+                        </span>
+                        <span>•</span>
+                        <span>{movie.genre?.slice(0, 2).join(", ")}</span>
+                        <span>•</span>
+                        <span className="suggestion-cert">{movie.certificate}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </nav>
 
-        {/* Right Controls: City Selector, My Bookings, Profile */}
+        {/* Right Section: Location, My Bookings, Profile Avatar */}
         <div className="navbar-actions-right">
-          {/* City Selector Button */}
+          {/* Location Trigger */}
           <button
             type="button"
             className="btn-city-trigger"
             onClick={onOpenCityModal}
-            title="Change Location"
+            title="Change City"
           >
-            <MapPin size={16} className="icon-crimson" />
+            <MapPin size={15} className="city-pin-icon" />
             <span className="city-name-label">{selectedCity}</span>
-            <ChevronDown size={14} className="dropdown-arrow" />
+            <ChevronDown size={13} className="city-chevron" />
           </button>
 
           {/* My Bookings Button */}
@@ -145,63 +156,32 @@ export default function CustomerNavbar({
             type="button"
             className="btn-nav-my-bookings"
             onClick={onOpenMyBookings}
-            title="View booked movie tickets & QR passes"
+            title="My Bookings"
           >
-            <Ticket size={16} className="icon-crimson" />
-            <span className="btn-label">My Bookings</span>
+            <Ticket size={15} className="ticket-icon-red" />
+            <span className="bookings-label">My Bookings</span>
             {bookingsCount > 0 && (
-              <span className="bookings-count-pill">{bookingsCount}</span>
+              <span className="bookings-badge-count">{bookingsCount}</span>
             )}
           </button>
 
-          {/* User Profile */}
-          <div className="nav-user-profile" title={user?.email}>
-            <div className="user-avatar-circle">
-              <User size={15} />
-            </div>
-            <div className="user-info-text">
-              <span className="user-name">{user?.name}</span>
-              <span className="user-tier">CinePass Member</span>
-            </div>
-            <button
-              type="button"
-              onClick={logout}
-              title="Sign out"
-              aria-label="Sign out"
-              style={{ background: "none", border: 0, color: "#94a3b8", cursor: "pointer", padding: 6, marginLeft: 4 }}
-            >
-              <LogOut size={16} />
-            </button>
+          {/* User Avatar Circle */}
+          <div className="nav-user-profile-badge" title={user?.name || user?.email || "User"}>
+            <div className="user-avatar-initial">{userInitial}</div>
+            {logout && (
+              <button
+                type="button"
+                className="btn-nav-logout"
+                onClick={logout}
+                title="Sign out"
+                aria-label="Sign out"
+              >
+                <LogOut size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Secondary Cinema Category Navigation Tier */}
-      <nav className="navbar-secondary-tier">
-        <div className="secondary-nav-container">
-          <div className="secondary-nav-left">
-            <button
-              type="button"
-              className="secondary-nav-btn active"
-              onClick={() => onSelectFilter && onSelectFilter("NOW_SHOWING")}
-            >
-              Movies
-            </button>
-          </div>
-
-          <div className="secondary-nav-right">
-            <button
-              type="button"
-              className="secondary-offers-btn"
-              onClick={onOpenOffers}
-              title="View available discount coupon codes"
-            >
-              <Sparkles size={14} className="icon-amber" />
-              <span>Offers & Promos</span>
-            </button>
-          </div>
-        </div>
-      </nav>
     </header>
   );
 }

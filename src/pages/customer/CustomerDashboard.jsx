@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import CustomerNavbar from "../../components/customer/CustomerNavbar";
-import HeroBanner from "../../components/customer/HeroBanner";
 import MovieCard from "../../components/customer/MovieCard";
 import MovieDetailModal from "../../components/customer/MovieDetailModal";
 import ShowtimeSelectorModal from "../../components/customer/ShowtimeSelectorModal";
@@ -27,27 +26,17 @@ import {
 } from "../../services/customerBookingService";
 import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 import {
-  Sparkles,
   Film,
-  Flame,
   CalendarDays,
   Heart,
+  ChevronRight,
+  SlidersHorizontal,
 } from "lucide-react";
 
-const GENRES = [
-  "ALL",
-  "Action",
-  "Sci-Fi",
-  "Drama",
-  "Adventure",
-  "Animation",
-  "Comedy",
-  "Horror",
-  "Thriller",
-];
-
-const LANGUAGES = ["ALL", "English", "Hindi", "Telugu", "Tamil"];
-const FORMATS = ["ALL", "IMAX 2D", "IMAX 3D", "4DX", "2D", "3D"];
+const SIDEBAR_LANGUAGES = ["ALL", "English", "Hindi", "Telugu", "Tamil", "Malayalam", "Kannada"];
+const SIDEBAR_FORMATS = ["ALL", "IMAX 2D", "IMAX 3D", "4DX", "2D", "3D"];
+const SIDEBAR_GENRES = ["ALL", "Action", "Drama", "Comedy", "Thriller", "Horror", "Sci-Fi"];
+const QUICK_GENRES = ["ALL", "Action", "Drama", "Comedy", "Thriller", "Horror"];
 
 export default function CustomerDashboard() {
   // Storage initialization, backend synchronization & periodic cleanup
@@ -83,7 +72,7 @@ export default function CustomerDashboard() {
   }, []);
 
   // Modals state
-  const [activeModal, setActiveModal] = useState(null); // 'detail' | 'showtimes' | 'seats' | 'fnb' | 'payment' | 'ticket' | 'my_bookings' | 'trailer' | 'offers' | null
+  const [activeModal, setActiveModal] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [activeShow, setActiveShow] = useState(null);
   const [activeShowDetails, setActiveShowDetails] = useState(null);
@@ -124,9 +113,9 @@ export default function CustomerDashboard() {
     return list;
   }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity, watchlistVersion]);
 
-  // Featured movies for hero carousel
-  const featuredMovies = useMemo(() => {
-    return INITIAL_MOVIES.filter((m) => m.featured);
+  // Separate coming soon movies for the lower section
+  const comingSoonMovies = useMemo(() => {
+    return INITIAL_MOVIES.filter((m) => m.status === "COMING_SOON").slice(0, 5);
   }, []);
 
   // Modal Launchers
@@ -152,13 +141,11 @@ export default function CustomerDashboard() {
     setActiveModal("seats");
   };
 
-  // From Seat Selection -> to F&B snack bar
   const handleProceedToFnb = (seatSelectionData) => {
     setPendingSeatSelection(seatSelectionData);
     setActiveModal("fnb");
   };
 
-  // From F&B -> to Payment Modal
   const handleProceedToPaymentWithFnb = (fnbItems) => {
     try {
       if (!pendingSeatSelection) return;
@@ -228,200 +215,275 @@ export default function CustomerDashboard() {
         onOpenOffers={() => setActiveModal("offers")}
       />
 
-      {/* Hero Showcase Banner */}
-      {!searchQuery && selectedGenre === "ALL" && statusFilter === "NOW_SHOWING" && (
-        <HeroBanner
-          featuredMovies={featuredMovies}
-          onBookTickets={handleOpenShowtimes}
-          onWatchTrailer={handleOpenTrailer}
-          onOpenDetail={handleOpenDetail}
-        />
-      )}
-
-      {/* Main Movies Catalog Section */}
-      <main className="catalog-main-content">
-        <div className="catalog-controls-container">
-          {/* BookMyShow Tab Navigation: Now Showing vs Coming Soon vs Watchlist */}
-          <div className="bms-main-view-tabs">
-            <button
-              type="button"
-              className={`bms-view-tab ${statusFilter === "NOW_SHOWING" ? "active" : ""}`}
-              onClick={() => {
-                setStatusFilter("NOW_SHOWING");
-                setSelectedFormat("ALL");
-              }}
-            >
-              <Flame size={18} className="icon-crimson" />
-              <span>Now Showing</span>
-            </button>
-            <button
-              type="button"
-              className={`bms-view-tab ${statusFilter === "COMING_SOON" ? "active" : ""}`}
-              onClick={() => {
-                setStatusFilter("COMING_SOON");
-                setSelectedFormat("ALL");
-              }}
-            >
-              <CalendarDays size={18} className="icon-cyan" />
-              <span>Coming Soon</span>
-            </button>
-            <button
-              type="button"
-              className={`bms-view-tab ${statusFilter === "WATCHLIST" ? "active" : ""}`}
-              onClick={() => {
-                setStatusFilter("WATCHLIST");
-                setSelectedFormat("ALL");
-              }}
-            >
-              <Heart size={18} className="icon-crimson" />
-              <span>My Watchlist ({watchlistCount})</span>
-            </button>
+      {/* Main Two-Column Layout (Sidebar + Content) */}
+      <div className="cine-layout-container">
+        {/* Left Filter Sidebar */}
+        <aside className="cine-sidebar">
+          {/* Browse Group */}
+          <div className="sidebar-group">
+            <span className="sidebar-group-title">Browse</span>
+            <div className="sidebar-browse-list">
+              <button
+                type="button"
+                className={`sidebar-browse-btn ${statusFilter === "NOW_SHOWING" ? "active" : ""}`}
+                onClick={() => {
+                  setStatusFilter("NOW_SHOWING");
+                  setSelectedFormat("ALL");
+                }}
+              >
+                <Film size={16} />
+                <span>Now Showing</span>
+              </button>
+              <button
+                type="button"
+                className={`sidebar-browse-btn ${statusFilter === "COMING_SOON" ? "active" : ""}`}
+                onClick={() => {
+                  setStatusFilter("COMING_SOON");
+                  setSelectedFormat("ALL");
+                }}
+              >
+                <CalendarDays size={16} />
+                <span>Coming Soon</span>
+              </button>
+              <button
+                type="button"
+                className={`sidebar-browse-btn ${statusFilter === "WATCHLIST" ? "active" : ""}`}
+                onClick={() => setStatusFilter("WATCHLIST")}
+              >
+                <Heart size={16} fill={statusFilter === "WATCHLIST" ? "currentColor" : "none"} />
+                <span>Watchlist</span>
+                {watchlistCount > 0 && (
+                  <span className="sidebar-badge-count">{watchlistCount}</span>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="catalog-header-row">
-            <div className="catalog-title-group">
-              <div className="section-badge">
-                <Sparkles size={14} className="icon-crimson" />
-                <span>
-                  {statusFilter === "NOW_SHOWING"
-                    ? "EXPERIENCE IN THEATRES"
-                    : statusFilter === "COMING_SOON"
-                    ? "UPCOMING CINEMA RELEASES"
-                    : statusFilter === "WATCHLIST"
-                    ? "SAVED FAVORITES"
-                    : "ALL CINEMA EXPERIENCES"}
-                </span>
-              </div>
-              <h2>
-                {statusFilter === "NOW_SHOWING"
-                  ? `Movies Screening in ${currentCity}`
-                  : statusFilter === "COMING_SOON"
-                  ? `Anticipated Movies Coming to ${currentCity}`
-                  : statusFilter === "WATCHLIST"
-                  ? `Your Saved Watchlist Movies`
-                  : `Movies Screening in ${currentCity}`}
-              </h2>
-            </div>
-
-            <div className="catalog-right-controls">
-              <span className="movies-count-indicator">
-                {movies.length} {movies.length === 1 ? "Movie" : "Movies"} Available
-              </span>
-
-              {/* Sort By Dropdown */}
-              <div className="sort-dropdown-wrap">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bms-sort-select"
+          {/* Languages Filter */}
+          <div className="sidebar-group">
+            <span className="sidebar-group-title">Languages</span>
+            <div className="sidebar-pill-list">
+              {SIDEBAR_LANGUAGES.map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  className={`sidebar-pill-btn ${selectedLanguage === lang ? "active" : ""}`}
+                  onClick={() => setSelectedLanguage(lang)}
                 >
-                  <option value="popular">Most Popular</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="latest">Release Date</option>
-                </select>
-              </div>
+                  {lang === "ALL" ? "All" : lang}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Multi-tier Filter Bar */}
-          <div className="bms-filter-strip-wrapper">
-            {/* Languages Filter Pills */}
-            <div className="filter-pill-row">
-              <span className="filter-category-label">Languages:</span>
-              <div className="filter-scroll-row">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang}
-                    type="button"
-                    className={`bms-filter-chip ${selectedLanguage === lang ? "active" : ""}`}
-                    onClick={() => setSelectedLanguage(lang)}
-                  >
-                    {lang}
-                  </button>
+          {/* Formats Filter */}
+          <div className="sidebar-group">
+            <span className="sidebar-group-title">Formats</span>
+            <div className="sidebar-pill-list">
+              {SIDEBAR_FORMATS.map((fmt) => (
+                <button
+                  key={fmt}
+                  type="button"
+                  className={`sidebar-pill-btn ${selectedFormat === fmt ? "active" : ""}`}
+                  onClick={() => setSelectedFormat(fmt)}
+                >
+                  {fmt === "ALL" ? "All" : fmt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Genres Filter */}
+          <div className="sidebar-group">
+            <span className="sidebar-group-title">Genres</span>
+            <div className="sidebar-pill-list">
+              {SIDEBAR_GENRES.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={`sidebar-pill-btn ${selectedGenre === g ? "active" : ""}`}
+                  onClick={() => setSelectedGenre(g)}
+                >
+                  {g === "ALL" ? "All" : g}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Cinema Content Area */}
+        <main className="cine-main-content">
+          {/* Hero Header Area */}
+          <section className="cine-hero-header">
+            <div className="cine-hero-overlay" />
+            <div className="cine-hero-content">
+              <span className="cine-hero-tracker">
+                {statusFilter === "NOW_SHOWING"
+                  ? "NOW SHOWING"
+                  : statusFilter === "COMING_SOON"
+                  ? "COMING SOON"
+                  : statusFilter === "WATCHLIST"
+                  ? "MY WATCHLIST"
+                  : "ALL MOVIES"}
+              </span>
+              <h1 className="cine-hero-headline">
+                {statusFilter === "COMING_SOON"
+                  ? "Anticipated releases on the horizon."
+                  : statusFilter === "WATCHLIST"
+                  ? "Your saved movies and favorites."
+                  : "Movies worth leaving home for."}
+              </h1>
+            </div>
+          </section>
+
+          {/* Quick Filter Bar & Sort Controls */}
+          <div className="cine-quick-filter-bar">
+            {/* Quick Horizontal Genre Pills */}
+            <div className="quick-genres-list">
+              {QUICK_GENRES.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={`quick-genre-pill ${selectedGenre === g ? "active" : ""}`}
+                  onClick={() => setSelectedGenre(g)}
+                >
+                  {g === "ALL" ? "All" : g}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="cine-sort-wrapper">
+              <label htmlFor="sort-select" className="sort-label">Sort by</label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-dropdown-select"
+              >
+                <option value="popular">Most Popular</option>
+                <option value="rating">Highest Rated</option>
+                <option value="latest">Release Date</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Active Filter Indicators */}
+          {(selectedGenre !== "ALL" || selectedLanguage !== "ALL" || selectedFormat !== "ALL" || searchQuery) && (
+            <div className="active-filters-strip">
+              <span className="filters-strip-label">
+                <SlidersHorizontal size={13} /> Active Filters:
+              </span>
+              {selectedGenre !== "ALL" && (
+                <span className="active-tag-bubble">
+                  Genre: {selectedGenre}
+                  <button type="button" onClick={() => setSelectedGenre("ALL")}>×</button>
+                </span>
+              )}
+              {selectedLanguage !== "ALL" && (
+                <span className="active-tag-bubble">
+                  Language: {selectedLanguage}
+                  <button type="button" onClick={() => setSelectedLanguage("ALL")}>×</button>
+                </span>
+              )}
+              {selectedFormat !== "ALL" && (
+                <span className="active-tag-bubble">
+                  Format: {selectedFormat}
+                  <button type="button" onClick={() => setSelectedFormat("ALL")}>×</button>
+                </span>
+              )}
+              {searchQuery && (
+                <span className="active-tag-bubble">
+                  Search: "{searchQuery}"
+                  <button type="button" onClick={() => setSearchQuery("")}>×</button>
+                </span>
+              )}
+              <button
+                type="button"
+                className="btn-clear-all-filters"
+                onClick={() => {
+                  setSelectedGenre("ALL");
+                  setSelectedLanguage("ALL");
+                  setSelectedFormat("ALL");
+                  setSearchQuery("");
+                }}
+              >
+                Reset All
+              </button>
+            </div>
+          )}
+
+          {/* Movie Grid */}
+          <section className="cine-grid-section">
+            {movies.length > 0 ? (
+              <div className="cine-movie-grid">
+                {movies.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onOpenDetail={handleOpenDetail}
+                    onBookTickets={handleOpenShowtimes}
+                    onWatchTrailer={handleOpenTrailer}
+                  />
                 ))}
               </div>
-            </div>
+            ) : (
+              <div className="empty-catalog-state">
+                <p className="empty-title">No movies match your current filters</p>
+                <p className="empty-subtitle">
+                  {statusFilter === "WATCHLIST"
+                    ? "Click the heart icon on any movie poster to save it to your watchlist."
+                    : "Try selecting 'All' in the filters or clearing your search query."}
+                </p>
+                <button
+                  type="button"
+                  className="btn-empty-reset"
+                  onClick={() => {
+                    setSelectedGenre("ALL");
+                    setSelectedLanguage("ALL");
+                    setSelectedFormat("ALL");
+                    setSearchQuery("");
+                    setStatusFilter("NOW_SHOWING");
+                  }}
+                >
+                  View All Now Showing
+                </button>
+              </div>
+            )}
+          </section>
 
-            {/* Formats Filter Pills */}
-            <div className="filter-pill-row">
-              <span className="filter-category-label">Formats:</span>
-              <div className="filter-scroll-row">
-                {FORMATS.map((fmt) => (
-                  <button
-                    key={fmt}
-                    type="button"
-                    className={`bms-filter-chip ${selectedFormat === fmt ? "active" : ""}`}
-                    onClick={() => setSelectedFormat(fmt)}
-                  >
-                    {fmt}
-                  </button>
+          {/* "Coming Soon" Section (Rendered when viewing Now Showing) */}
+          {statusFilter === "NOW_SHOWING" && !searchQuery && comingSoonMovies.length > 0 && (
+            <section className="cine-coming-soon-section">
+              <div className="section-header-row">
+                <h2 className="section-title-serif">Coming Soon</h2>
+                <button
+                  type="button"
+                  className="link-view-all"
+                  onClick={() => setStatusFilter("COMING_SOON")}
+                >
+                  <span>View all</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+
+              <div className="cine-movie-grid">
+                {comingSoonMovies.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onOpenDetail={handleOpenDetail}
+                    onBookTickets={handleOpenShowtimes}
+                    onWatchTrailer={handleOpenTrailer}
+                  />
                 ))}
               </div>
-            </div>
+            </section>
+          )}
+        </main>
+      </div>
 
-            {/* Genre Filter Pills */}
-            <div className="filter-pill-row">
-              <span className="filter-category-label">Genres:</span>
-              <div className="genre-filter-scroll-bar">
-                {GENRES.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    className={`genre-filter-pill ${selectedGenre === g ? "active" : ""}`}
-                    onClick={() => setSelectedGenre(g)}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Movies Grid */}
-        {movies.length === 0 ? (
-          <div className="catalog-empty-search-state">
-            <Film size={48} className="empty-icon" />
-            <h3>{statusFilter === "WATCHLIST" ? "Your Watchlist is Empty" : "No movies found"}</h3>
-            <p>
-              {statusFilter === "WATCHLIST"
-                ? "Click the heart button on any movie card to save it to your personal watchlist for quick access."
-                : "We couldn't find any movie matching your current filters."}
-            </p>
-            <button
-              type="button"
-              className="btn-reset-filters"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedGenre("ALL");
-                setSelectedLanguage("ALL");
-                setSelectedFormat("ALL");
-                setStatusFilter("NOW_SHOWING");
-                setSortBy("popular");
-              }}
-            >
-              {statusFilter === "WATCHLIST" ? "Browse Now Showing" : "Reset Search & Filters"}
-            </button>
-          </div>
-        ) : (
-          <div className="movies-showcase-grid">
-            {movies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onOpenDetail={handleOpenDetail}
-                onBookTickets={handleOpenShowtimes}
-                onWatchTrailer={handleOpenTrailer}
-              />
-            ))}
-          </div>
-        )}
-
-      </main>
-
-      {/* MODALS */}
-
-      {/* 0. City Selector Dialog */}
+      {/* Modals & Dialogs */}
       {showCityModal && (
         <CitySelectorModal
           currentCity={currentCity}
@@ -430,7 +492,6 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 1. Movie Details */}
       {activeModal === "detail" && selectedMovie && (
         <MovieDetailModal
           movie={selectedMovie}
@@ -440,7 +501,6 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 2. Showtime & Theatre Picker */}
       {activeModal === "showtimes" && selectedMovie && (
         <ShowtimeSelectorModal
           movie={selectedMovie}
@@ -450,17 +510,16 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 3. 2D / 3D Seat Selection */}
       {activeModal === "seats" && activeShow && activeShowDetails && (
         <SeatSelectionModal
           showId={activeShow.id}
+          show={activeShow}
           showDetails={activeShowDetails}
           onClose={handleCloseModal}
           onProceedToFnb={handleProceedToFnb}
         />
       )}
 
-      {/* 3b. BookMyShow Food & Beverage Concessions */}
       {activeModal === "fnb" && pendingSeatSelection && (
         <FoodAndBeverageModal
           pendingBookingData={pendingSeatSelection}
@@ -471,18 +530,16 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 4. Mock Checkout & Payment */}
       {activeModal === "payment" && pendingBooking && (
         <PaymentModal
           pendingBooking={pendingBooking}
           onBack={() => setActiveModal("fnb")}
-          onPaymentSuccess={handlePaymentSuccess}
           onClose={handleCloseModal}
+          onPaymentSuccess={handlePaymentSuccess}
           onReservationExpired={handleReservationExpired}
         />
       )}
 
-      {/* 5. Ticket Confirmation */}
       {activeModal === "ticket" && confirmedBooking && (
         <TicketConfirmationModal
           booking={confirmedBooking}
@@ -491,7 +548,6 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 6. My Bookings Drawer/Modal */}
       {activeModal === "my_bookings" && (
         <MyBookingsModal
           onClose={handleCloseModal}
@@ -499,7 +555,6 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 7. Trailer Video Embed Modal */}
       {activeModal === "trailer" && selectedMovie && (
         <TrailerModal
           movie={selectedMovie}
@@ -507,11 +562,8 @@ export default function CustomerDashboard() {
         />
       )}
 
-      {/* 8. Exclusive Offers & Discounts Modal */}
       {activeModal === "offers" && (
-        <OffersModal
-          onClose={handleCloseModal}
-        />
+        <OffersModal onClose={handleCloseModal} />
       )}
     </div>
   );

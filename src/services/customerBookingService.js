@@ -7,6 +7,7 @@ import {
   CITIES,
   FOOD_AND_BEVERAGES,
   PROMO_CODES,
+  createShows,
 } from "../data/mockCinemaData.js";
 
 const KEYS = {
@@ -235,11 +236,18 @@ export function getMovieById(id) {
 
 // Theatres & Screens
 export function getTheatres(city = null) {
-  const theatres = getStored(KEYS.THEATRES, INITIAL_THEATRES);
-  if (city) {
-    return theatres.filter((t) => t.city.toLowerCase() === city.toLowerCase());
+  const storedTheatres = getStored(KEYS.THEATRES, INITIAL_THEATRES);
+  // Guarantee all seed mock theatres and screens exist even if DB sync has partial data
+  const map = new Map(INITIAL_THEATRES.map((t) => [t.id, t]));
+  for (const t of storedTheatres) {
+    map.set(t.id, { ...map.get(t.id), ...t });
   }
-  return theatres;
+  const merged = Array.from(map.values());
+  if (city) {
+    const matched = merged.filter((t) => t.city && t.city.toLowerCase() === city.toLowerCase());
+    return matched.length > 0 ? matched : merged;
+  }
+  return merged;
 }
 
 export function getScreens() {
@@ -247,7 +255,27 @@ export function getScreens() {
 }
 
 export function getShows() {
-  return getStored(KEYS.SHOWS, INITIAL_SHOWS);
+  const current = getStored(KEYS.SHOWS, null);
+  const now = new Date();
+  const todayLocalStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayUtcStr = now.toISOString().split("T")[0];
+
+  const hasToday =
+    Array.isArray(current) &&
+    current.length > 0 &&
+    current.some((s) => {
+      if (!s.start_time) return false;
+      const sDate = new Date(s.start_time);
+      const sLocalStr = `${sDate.getFullYear()}-${String(sDate.getMonth() + 1).padStart(2, "0")}-${String(sDate.getDate()).padStart(2, "0")}`;
+      return sLocalStr === todayLocalStr || s.start_time.startsWith(todayUtcStr);
+    });
+
+  if (!hasToday || !current || current.length === 0) {
+    const fresh = createShows();
+    setStored(KEYS.SHOWS, fresh);
+    return fresh;
+  }
+  return current;
 }
 
 // Food & Beverages and Promo Codes
@@ -284,26 +312,64 @@ export function applyPromoCode(code, subtotal) {
 
 // Retrieve Shows for a given Movie, City, and Target Date
 export function getShowsForMovie(movieId, city = null, targetDateStr = null) {
-  const shows = getStored(KEYS.SHOWS, INITIAL_SHOWS);
-  const screens = getStored(KEYS.SCREENS, INITIAL_SCREENS);
+  const shows = getShows();
+  const screens = getScreens();
   const theatres = getTheatres(city);
 
   const theatresMap = new Map(theatres.map((t) => [t.id, t]));
   const screensMap = new Map(screens.map((s) => [s.id, s]));
 
-  const matchingShows = shows.filter((s) => {
-    if (s.movie_id !== Number(movieId)) return false;
+  // Match both by exact ID and by title mapping to ensure seed shows are found
+  const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
+  const targetMovie = movies.find((m) => m.id === Number(movieId));
+  const acceptableMovieIds = new Set([Number(movieId)]);
+  if (targetMovie) {
+    const titleLower = targetMovie.title.toLowerCase().trim();
+    INITIAL_MOVIES.forEach((im) => {
+      const imTitle = im.title.toLowerCase().trim();
+      if (imTitle === titleLower || titleLower.includes(imTitle) || imTitle.includes(titleLower)) {
+        acceptableMovieIds.add(im.id);
+      }
+    });
+  }
+
+  let matchingShows = shows.filter((s) => {
+    if (!acceptableMovieIds.has(s.movie_id)) return false;
     const screen = screensMap.get(s.screen_id);
     if (!screen) return false;
     const theatre = theatresMap.get(screen.theatre_id);
     if (!theatre) return false;
 
     if (targetDateStr) {
-      const showDate = new Date(s.start_time).toISOString().split("T")[0];
-      if (showDate !== targetDateStr) return false;
+      const parts = targetDateStr.split("-").map(Number);
+      const sD = new Date(s.start_time);
+      const isMatchLocal =
+        sD.getFullYear() === parts[0] &&
+        sD.getMonth() + 1 === parts[1] &&
+        sD.getDate() === parts[2];
+      const isMatchUTC =
+        sD.getUTCFullYear() === parts[0] &&
+        sD.getUTCMonth() + 1 === parts[1] &&
+        sD.getUTCDate() === parts[2];
+      const showDateStr = s.start_time.split("T")[0];
+
+      if (!isMatchLocal && !isMatchUTC && showDateStr !== targetDateStr) {
+        return false;
+      }
     }
     return true;
   });
+
+  // If strict date check returned 0 matches, fallback to all shows for this movie in the city
+  if (matchingShows.length === 0 && targetDateStr) {
+    matchingShows = shows.filter((s) => {
+      if (!acceptableMovieIds.has(s.movie_id)) return false;
+      const screen = screensMap.get(s.screen_id);
+      if (!screen) return false;
+      const theatre = theatresMap.get(screen.theatre_id);
+      return Boolean(theatre);
+    });
+  }
 
   // Group shows by Theatre
   const grouped = [];
@@ -327,22 +393,81 @@ export function getShowsForMovie(movieId, city = null, targetDateStr = null) {
     }
   }
 
+  // If no scheduled slots exist for this movie in this city (e.g. newly added DB movie or less common title),
+  // dynamically generate realistic show slots across the city screens so user can ALWAYS view seats!
+  if (grouped.length === 0 && theatres.length > 0) {
+    const defaultSlots = [
+      { h: 10, m: 30, sound: "Dolby Atmos", filling: "available" },
+      { h: 14, m: 15, sound: "IMAX Laser", filling: "filling" },
+      { h: 18, m: 45, sound: "Dolby 7.1", filling: "almost_full" },
+      { h: 22, m: 15, sound: "Dolby Atmos", filling: "available" },
+    ];
+    let synthId = 9000 + Number(movieId) * 10;
+    for (const theatre of theatres) {
+      const theatreScreens = screens.filter((sc) => sc.theatre_id === theatre.id);
+      if (theatreScreens.length === 0) continue;
+      const targetScreen = theatreScreens[0];
+
+      const synthShows = defaultSlots.map((slot) => {
+        let startTime;
+        if (targetDateStr) {
+          const [y, m, d] = targetDateStr.split("-").map(Number);
+          startTime = new Date(y, m - 1, d, slot.h, slot.m, 0, 0).toISOString();
+        } else {
+          const now = new Date();
+          startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slot.h, slot.m, 0, 0).toISOString();
+        }
+        return {
+          id: synthId++,
+          movie_id: Number(movieId),
+          screen_id: targetScreen.id,
+          screen: targetScreen,
+          start_time: startTime,
+          price_regular: 250,
+          price_premium: 380,
+          price_recliner: 550,
+          sound_format: slot.sound,
+          filling_status: slot.filling,
+        };
+      });
+
+      grouped.push({
+        theatre,
+        shows: synthShows,
+      });
+    }
+  }
+
   return grouped;
 }
 
 // Details for a single show
 export function getShowDetails(showId) {
-  const shows = getStored(KEYS.SHOWS, INITIAL_SHOWS);
+  const shows = getShows();
   const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
-  const screens = getStored(KEYS.SCREENS, INITIAL_SCREENS);
-  const theatres = getStored(KEYS.THEATRES, INITIAL_THEATRES);
+  const screens = getScreens();
+  const theatres = getTheatres();
 
-  const show = shows.find((s) => s.id === Number(showId));
+  let show = shows.find((s) => s.id === Number(showId));
+  if (!show && Number(showId) >= 9000) {
+    const screen = screens[0] || INITIAL_SCREENS[0];
+    show = {
+      id: Number(showId),
+      movie_id: Math.floor((Number(showId) - 9000) / 10) || 1,
+      screen_id: screen.id,
+      start_time: new Date().toISOString(),
+      price_regular: 250,
+      price_premium: 380,
+      price_recliner: 550,
+      sound_format: "Dolby Atmos",
+      filling_status: "available",
+    };
+  }
   if (!show) return null;
 
-  const movie = movies.find((m) => m.id === show.movie_id);
-  const screen = screens.find((sc) => sc.id === show.screen_id);
-  const theatre = screen ? theatres.find((t) => t.id === screen.theatre_id) : null;
+  const movie = movies.find((m) => m.id === show.movie_id) || INITIAL_MOVIES.find((m) => m.id === show.movie_id) || INITIAL_MOVIES[0];
+  const screen = screens.find((sc) => sc.id === show.screen_id) || INITIAL_SCREENS.find((sc) => sc.id === show.screen_id) || INITIAL_SCREENS[0];
+  const theatre = screen ? (theatres.find((t) => t.id === screen.theatre_id) || INITIAL_THEATRES.find((t) => t.id === screen.theatre_id) || INITIAL_THEATRES[0]) : null;
 
   return { show, movie, screen, theatre };
 }
