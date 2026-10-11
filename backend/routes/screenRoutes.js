@@ -7,21 +7,43 @@ import {
   deleteScreen,
 } from "../controllers/screenController.js";
 
+import {
+  requireAuth,
+  requireAdmin
+} from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
-// GET ALL SCREENS
-router.get("/screens", getAllScreens);
 
-// GET SCREEN BY ID
-router.get("/screens/:id", getScreenById);
+ // GET ALL SCREENS — public
+router.get("/", getAllScreens);
 
-// CREATE SCREEN
-router.post("/screens/create", createScreen);
+// GET SCREEN BY ID — public
+router.get("/:id", getScreenById);
 
-// UPDATE SCREEN
-router.put("/screens/update/:id", updateScreen);
+// CREATE SCREEN — admin only
+router.post(
+  "/create",
+  requireAuth,
+  requireAdmin,
+  createScreen
+);
 
-// DELETE SCREEN
-router.delete("/screens/delete/:id", deleteScreen);
+// UPDATE SCREEN — admin only
+router.put(
+  "/update/:id",
+  requireAuth,
+  requireAdmin,
+  updateScreen
+);
+
+// DELETE SCREEN — admin only
+router.delete(
+  "/screens/delete/:id",
+  requireAuth,
+  requireAdmin,
+  deleteScreen
+);
+
 
 export default router;
