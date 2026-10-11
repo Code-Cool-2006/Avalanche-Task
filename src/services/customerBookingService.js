@@ -17,6 +17,8 @@ const KEYS = {
   SHOW_SEATS: "cine_bms_show_seats_v3",
   BOOKINGS: "cine_bms_bookings_v3",
   SELECTED_CITY: "cine_bms_selected_city_v3",
+  WATCHLIST: "cine_user_watchlist",
+  FAV_THEATRES: "cine_user_fav_theatres",
 };
 
 export const CURRENT_USER = {
@@ -57,6 +59,118 @@ export function initializeStorage() {
   getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
   getStored(KEYS.BOOKINGS, []);
   getStored(KEYS.SELECTED_CITY, CITIES[0]);
+  getStored(KEYS.WATCHLIST, []);
+  getStored(KEYS.FAV_THEATRES, {});
+}
+
+// Watchlist Helpers (Persisted in localStorage)
+export function getWatchlist() {
+  return getStored(KEYS.WATCHLIST, []);
+}
+
+export function isMovieInWatchlist(id) {
+  const list = getWatchlist();
+  return list.includes(Number(id));
+}
+
+export function toggleWatchlistMovie(id) {
+  const numId = Number(id);
+  const current = getWatchlist();
+  const exists = current.includes(numId);
+  const updated = exists ? current.filter((x) => x !== numId) : [...current, numId];
+  setStored(KEYS.WATCHLIST, updated);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cine_watchlist_updated", { detail: { watchlist: updated } }));
+  }
+  return !exists;
+}
+
+// Favorite Theatres Helpers (Persisted in localStorage)
+export function getFavoriteTheatres() {
+  return getStored(KEYS.FAV_THEATRES, {});
+}
+
+export function toggleFavoriteTheatre(theatreId) {
+  const current = getFavoriteTheatres();
+  const updated = {
+    ...current,
+    [theatreId]: !current[theatreId],
+  };
+  setStored(KEYS.FAV_THEATRES, updated);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cine_fav_theatres_updated", { detail: { favs: updated } }));
+  }
+  return updated;
+}
+
+// Sync catalog with backend database if online, fallback to seed data
+export async function syncFromBackend() {
+  try {
+    const res = await fetch("/api/movies");
+    if (res.ok) {
+      const dbMovies = await res.json();
+      if (Array.isArray(dbMovies) && dbMovies.length > 0) {
+        const normalized = dbMovies.map((m) => {
+          let parsedGenre = ["Action"];
+          if (Array.isArray(m.genre)) parsedGenre = m.genre;
+          else if (typeof m.genre === "string") {
+            try {
+              const j = JSON.parse(m.genre);
+              parsedGenre = Array.isArray(j) ? j : [m.genre];
+            } catch {
+              parsedGenre = m.genre.split(",").map((g) => g.trim()).filter(Boolean);
+            }
+          }
+          return {
+            id: m.id,
+            title: m.title || "Untitled Movie",
+            description: m.description || "",
+            genre: parsedGenre.length ? parsedGenre : ["Action"],
+            language: m.language || "English",
+            languagesAvailable: m.languagesAvailable || [m.language || "English"],
+            formats: m.formats || ["2D", "IMAX 2D"],
+            duration_min: Number(m.duration_min) || 120,
+            rating: Number(m.rating) || 8.0,
+            votes: m.votes || "150K",
+            certificate: m.certificate || "U/A",
+            poster_url: m.poster_url || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+            backdrop_url: m.backdrop_url || m.poster_url || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1600&q=80",
+            trailer_url: m.trailer_url || "",
+            release_date: m.release_date || new Date().toISOString().split("T")[0],
+            featured: Boolean(m.featured),
+            status: m.status || (new Date(m.release_date) <= new Date() ? "NOW_SHOWING" : "COMING_SOON"),
+            cast: m.cast || [],
+            director: m.director || "Unknown",
+          };
+        });
+        const current = getStored(KEYS.MOVIES, INITIAL_MOVIES);
+        const map = new Map(current.map((x) => [x.id, x]));
+        for (const nm of normalized) {
+          map.set(nm.id, { ...map.get(nm.id), ...nm });
+        }
+        setStored(KEYS.MOVIES, Array.from(map.values()));
+      }
+    }
+  } catch {
+    // Graceful offline fallback
+  }
+
+  try {
+    const res = await fetch("/api/theatres");
+    if (res.ok) {
+      const dbTheatres = await res.json();
+      if (Array.isArray(dbTheatres) && dbTheatres.length > 0) {
+        const current = getStored(KEYS.THEATRES, INITIAL_THEATRES);
+        const map = new Map(current.map((x) => [x.id, x]));
+        for (const t of dbTheatres) {
+          map.set(t.id, { ...map.get(t.id), ...t });
+        }
+        setStored(KEYS.THEATRES, Array.from(map.values()));
+      }
+    }
+  } catch {
+    // Graceful offline fallback
+  }
 }
 
 // City Preference
@@ -84,9 +198,14 @@ export function getMovies(filters = {}) {
       if (!matchTitle && !matchGenre && !matchDirector && !matchCast) return false;
     }
 
-    // Status filter (NOW_SHOWING vs COMING_SOON)
+    // Status filter (NOW_SHOWING vs COMING_SOON vs WATCHLIST)
     if (status && status !== "ALL") {
-      if (m.status !== status) return false;
+      if (status === "WATCHLIST") {
+        const watchlist = getWatchlist();
+        if (!watchlist.includes(m.id)) return false;
+      } else if (m.status !== status) {
+        return false;
+      }
     }
 
     // Genre filter
