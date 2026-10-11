@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { X, Search, MapPin, Check, Building2 } from "lucide-react";
-import { CITIES, POPULAR_CITIES } from "../../data/mockCinemaData";
+import { getCities } from "../../services/customerBookingService";
+import { POPULAR_CITIES } from "../../data/mockCinemaData";
 
 export default function CitySelectorModal({
   currentCity,
@@ -9,13 +10,19 @@ export default function CitySelectorModal({
 }) {
   const [citySearch, setCitySearch] = useState("");
 
-  const filteredPopular = POPULAR_CITIES.filter((c) =>
-    c.name.toLowerCase().includes(citySearch.toLowerCase())
-  );
+  const allCities = useMemo(() => getCities(), []);
 
-  const filteredAllCities = CITIES.filter((c) =>
-    c.toLowerCase().includes(citySearch.toLowerCase())
-  );
+  const filteredPopular = useMemo(() => {
+    return POPULAR_CITIES.filter((c) =>
+      c.name.toLowerCase().includes(citySearch.toLowerCase())
+    );
+  }, [citySearch]);
+
+  const filteredAllCities = useMemo(() => {
+    return allCities.filter((c) =>
+      c.toLowerCase().includes(citySearch.toLowerCase())
+    );
+  }, [allCities, citySearch]);
 
   return (
     <div className="city-modal-backdrop" onClick={onClose}>

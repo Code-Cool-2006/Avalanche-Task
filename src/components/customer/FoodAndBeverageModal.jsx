@@ -10,8 +10,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { FOOD_AND_BEVERAGES } from "../../data/mockCinemaData";
-import { unlockAllMySeats } from "../../services/customerBookingService";
+import { getFoodAndBeverages, unlockAllMySeats } from "../../services/customerBookingService";
 
 const CATEGORIES = ["ALL", "Combos", "Popcorn", "Snacks", "Beverages"];
 
@@ -81,7 +80,9 @@ export default function FoodAndBeverageModal({
     });
   };
 
-  const filteredItems = FOOD_AND_BEVERAGES.filter((item) => {
+  const allFoodItems = getFoodAndBeverages();
+
+  const filteredItems = allFoodItems.filter((item) => {
     if (selectedCategory === "ALL") return true;
     return item.category.toLowerCase() === selectedCategory.toLowerCase();
   });
@@ -89,7 +90,7 @@ export default function FoodAndBeverageModal({
   // Calculate cart summary
   const cartItemList = Object.entries(cart)
     .map(([id, qty]) => {
-      const item = FOOD_AND_BEVERAGES.find((f) => f.id === id);
+      const item = allFoodItems.find((f) => String(f.id) === String(id));
       return item ? { ...item, quantity: qty } : null;
     })
     .filter(Boolean);

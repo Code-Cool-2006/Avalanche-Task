@@ -12,6 +12,7 @@ import {
   XCircle,
   Trash2,
 } from "lucide-react";
+import { useAuth } from "../../auth/AuthContext";
 import { getMyBookings, cancelBooking } from "../../services/customerBookingService";
 
 export default function MyBookingsModal({
@@ -19,6 +20,7 @@ export default function MyBookingsModal({
   onOpenTicketPass,
   onBookingCancelled,
 }) {
+  const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState("ALL"); // "ALL" | "CONFIRMED" | "CANCELLED"
   const [selectedBookingForQr, setSelectedBookingForQr] = useState(null);
@@ -26,14 +28,18 @@ export default function MyBookingsModal({
   const [confirmCancelId, setConfirmCancelId] = useState(null);
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
-  const refreshBookings = () => {
-    const list = getMyBookings();
-    setBookings(list);
+  const refreshBookings = async () => {
+    try {
+      const list = await getMyBookings(user?.id);
+      if (Array.isArray(list)) setBookings(list);
+    } catch (e) {
+      console.warn("Error refreshing bookings:", e);
+    }
   };
 
   useEffect(() => {
     refreshBookings();
-  }, []);
+  }, [user?.id]);
 
   const handleShowQr = (b) => {
     setSelectedBookingForQr(b);
@@ -44,9 +50,9 @@ export default function MyBookingsModal({
     }
   };
 
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
     try {
-      cancelBooking(bookingId);
+      await cancelBooking(bookingId);
       setConfirmCancelId(null);
       setFeedbackMsg("Booking cancelled successfully. Reserved seats have been freed.");
       refreshBookings();

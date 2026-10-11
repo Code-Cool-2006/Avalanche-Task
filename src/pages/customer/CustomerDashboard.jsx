@@ -12,6 +12,7 @@ import TrailerModal from "../../components/customer/TrailerModal";
 import CitySelectorModal from "../../components/customer/CitySelectorModal";
 import OffersModal from "../../components/customer/OffersModal";
 
+import { useAuth } from "../../auth/AuthContext";
 import {
   initializeStorage,
   getMovies,
@@ -23,8 +24,9 @@ import {
   cleanupExpiredLocks,
   syncFromBackend,
   getWatchlist,
+  setSessionUser,
 } from "../../services/customerBookingService";
-import { INITIAL_MOVIES } from "../../data/mockCinemaData";
+
 import {
   Film,
   CalendarDays,
@@ -39,15 +41,18 @@ const SIDEBAR_GENRES = ["ALL", "Action", "Drama", "Comedy", "Thriller", "Horror"
 const QUICK_GENRES = ["ALL", "Action", "Drama", "Comedy", "Thriller", "Horror"];
 
 export default function CustomerDashboard() {
+  const { user } = useAuth();
+
   // Storage initialization, backend synchronization & periodic cleanup
   useEffect(() => {
+    if (user) setSessionUser(user);
     initializeStorage();
     syncFromBackend().catch(() => {});
     const interval = setInterval(() => {
       cleanupExpiredLocks();
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const [currentCity, setCurrentCity] = useState(() => getSelectedCity());
   const [showCityModal, setShowCityModal] = useState(false);
@@ -57,19 +62,38 @@ export default function CustomerDashboard() {
   const [selectedLanguage, setSelectedLanguage] = useState("ALL");
   const [selectedFormat, setSelectedFormat] = useState("ALL");
   const [sortBy, setSortBy] = useState("popular"); // "popular" | "rating" | "latest"
-  const [bookingsList, setBookingsList] = useState(() => getMyBookings());
+  const [bookingsList, setBookingsList] = useState([]);
   const [watchlistCount, setWatchlistCount] = useState(() => getWatchlist().length);
   const [watchlistVersion, setWatchlistVersion] = useState(0);
+  const [moviesVersion, setMoviesVersion] = useState(0);
 
-  // Sync watchlist live across actions
+  // Sync live backend data across actions
   useEffect(() => {
     const handleWatchlistChange = () => {
       setWatchlistCount(getWatchlist().length);
       setWatchlistVersion((v) => v + 1);
     };
+    const handleMoviesChange = () => {
+      setMoviesVersion((v) => v + 1);
+    };
     window.addEventListener("cine_watchlist_updated", handleWatchlistChange);
-    return () => window.removeEventListener("cine_watchlist_updated", handleWatchlistChange);
+    window.addEventListener("cine_movies_synced", handleMoviesChange);
+    return () => {
+      window.removeEventListener("cine_watchlist_updated", handleWatchlistChange);
+      window.removeEventListener("cine_movies_synced", handleMoviesChange);
+    };
   }, []);
+
+  // Sync Bookings count with user id
+  const refreshBookings = () => {
+    getMyBookings(user?.id).then((b) => {
+      if (Array.isArray(b)) setBookingsList(b);
+    });
+  };
+
+  useEffect(() => {
+    refreshBookings();
+  }, [user?.id]);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null);
@@ -80,12 +104,6 @@ export default function CustomerDashboard() {
   const [pendingBooking, setPendingBooking] = useState(null);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
-  // Sync Bookings count
-  const refreshBookings = () => {
-    const b = getMyBookings();
-    setBookingsList(b);
-  };
-
   // Update city preference
   const handleCityChange = (city) => {
     setCurrentCity(city);
@@ -94,7 +112,7 @@ export default function CustomerDashboard() {
 
   // Filtered movies
   const movies = useMemo(() => {
-    if (watchlistVersion < 0) return [];
+    if (watchlistVersion < 0 || moviesVersion < 0) return [];
     let list = getMovies({
       query: searchQuery,
       genre: selectedGenre,
@@ -111,12 +129,13 @@ export default function CustomerDashboard() {
     }
 
     return list;
-  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity, watchlistVersion]);
+  }, [searchQuery, selectedGenre, selectedLanguage, selectedFormat, statusFilter, sortBy, currentCity, watchlistVersion, moviesVersion]);
 
   // Separate coming soon movies for the lower section
   const comingSoonMovies = useMemo(() => {
-    return INITIAL_MOVIES.filter((m) => m.status === "COMING_SOON").slice(0, 5);
-  }, []);
+    const all = getMovies();
+    return all.filter((m) => m.status === "COMING_SOON" || new Date(m.release_date) > new Date()).slice(0, 5);
+  }, [moviesVersion]);
 
   // Modal Launchers
   const handleOpenDetail = (movie) => {
@@ -146,16 +165,16 @@ export default function CustomerDashboard() {
     setActiveModal("fnb");
   };
 
-  const handleProceedToPaymentWithFnb = (fnbItems) => {
+  const handleProceedToPaymentWithFnb = async (fnbItems) => {
     try {
       if (!pendingSeatSelection) return;
       const { showId, seatIds, lockExpiresAt } = pendingSeatSelection;
-      const newPendingBooking = createPendingBooking(
+      const newPendingBooking = await createPendingBooking(
         showId,
         seatIds,
         fnbItems,
         null,
-        1,
+        user?.id || 1,
         lockExpiresAt
       );
       setPendingBooking(newPendingBooking);
@@ -205,6 +224,7 @@ export default function CustomerDashboard() {
         bookingsCount={confirmedCount}
         onOpenMyBookings={handleOpenMyBookings}
         onSelectMovieDirect={handleOpenDetail}
+        movies={movies}
         onSelectFilter={() => {
           setStatusFilter("NOW_SHOWING");
           setSelectedFormat("ALL");
