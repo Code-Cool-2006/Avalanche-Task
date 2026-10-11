@@ -37,43 +37,103 @@ export const getScreenById = async (req, res) => {
 };
 
 // CREATE SCREEN
+
 export const createScreen = async (req, res) => {
+  const { name, theatre_id } = req.body;
+
+  if (!name || !theatre_id) {
+    return res.status(400).json({
+      message: "Screen name and theatre_id are required",
+    });
+  }
+
+  const client = await pool.connect();
+
   try {
-    const { name, theatre_id } = req.body;
+    await client.query("BEGIN");
 
-    if (!name || !theatre_id) {
-      return res.status(400).json({
-        message: "Name and Theatre ID are required",
-      });
-    }
-
-    const theatreCheck = await pool.query(
-      "SELECT * FROM theatres WHERE id = $1",
+    // Check whether the theatre exists
+    const theatreResult = await client.query(
+      "SELECT id FROM theatres WHERE id = $1",
       [theatre_id]
     );
 
-    if (theatreCheck.rows.length === 0) {
+    if (theatreResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+
       return res.status(404).json({
-        message: "Theatre not found with the provided theatre_id",
+        message: "Theatre not found",
       });
     }
 
-    const result = await pool.query(
+    // Create the screen
+    const screenResult = await client.query(
       `INSERT INTO screens (name, theatre_id)
        VALUES ($1, $2)
        RETURNING *`,
       [name, theatre_id]
     );
 
+    const screen = screenResult.rows[0];
+
+    // Fixed layout: 8 rows, 10 seats per row
+    const rows = [
+      { label: "A", tier: "regular" },
+      { label: "B", tier: "regular" },
+      { label: "C", tier: "regular" },
+      { label: "D", tier: "regular" },
+      { label: "E", tier: "premium" },
+      { label: "F", tier: "premium" },
+      { label: "G", tier: "recliner" },
+      { label: "H", tier: "recliner" },
+    ];
+
+    // Prepare all 80 seats for insertion
+    const values = [];
+    const placeholders = [];
+    let index = 1;
+
+    for (const row of rows) {
+      for (let seatNumber = 1; seatNumber <= 10; seatNumber++) {
+        placeholders.push(
+          `($${index++}, $${index++}, $${index++}, $${index++})`
+        );
+
+        values.push(
+          screen.id,
+          row.label,
+          seatNumber,
+          row.tier
+        );
+      }
+    }
+
+    // Insert all seats in one query
+    await client.query(
+      `INSERT INTO seats
+        (screen_id, row_label, seat_number, tier)
+       VALUES ${placeholders.join(", ")}`,
+      values
+    );
+
+    // Save the screen and its seats together
+    await client.query("COMMIT");
+
     return res.status(201).json({
-      message: "Screen created successfully",
-      screen: result.rows[0],
+      message: "Screen created successfully with 80 seats",
+      screen,
+      seatsCreated: 80,
     });
   } catch (error) {
-    console.error("Error creating screen:", error.message);
+    await client.query("ROLLBACK");
+
+    console.error("Create screen error:", error);
+
     return res.status(500).json({
       message: "Failed to create screen",
     });
+  } finally {
+    client.release();
   }
 };
 

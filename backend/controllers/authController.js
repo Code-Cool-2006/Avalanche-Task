@@ -31,7 +31,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "strict",
-  path: "/api",
+  path: "/",
   maxAge: ACCESS_TTL * 1000,
 };
 
