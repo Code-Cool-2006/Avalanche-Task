@@ -1,0 +1,2260 @@
+/**
+ * Nordic Arthouse Cinema Theme (Bio Fågel Blå Stockholm 1926 Style)
+ * Comprehensive design system overrides for all client-side screens and modals.
+ */
+
+/* ==========================================================================
+   1. GLOBAL CANVAS & LAYOUT RESET
+   ========================================================================== */
+html, body {
+  background-color: var(--bg-page, #f9f6f0) !important;
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-sans) !important;
+}
+
+#root, .cine-app-root, .customer-dashboard-root {
+  background-color: var(--bg-page, #f9f6f0) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+/* Custom Tactile Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page, #f9f6f0);
+}
+::-webkit-scrollbar-thumb {
+  background: #d8d0c2;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b0a2;
+}
+
+/* ==========================================================================
+   2. TOP NAVIGATION BAR (Bio Fågel Blå Heritage Style)
+   ========================================================================== */
+.customer-navbar-header {
+  background: rgba(249, 246, 240, 0.95) !important;
+  backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+  box-shadow: 0 1px 4px rgba(40, 30, 20, 0.03) !important;
+}
+
+.navbar-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.navbar-brand .brand-logo-text {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  color: var(--text-primary, #18181b) !important;
+  text-transform: uppercase !important;
+}
+
+.brand-sub-badge {
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  background: #f0eae0 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-muted, #847e74) !important;
+  padding: 1px 6px !important;
+  border-radius: 3px !important;
+}
+
+.navbar-brand .brand-logo-icon {
+  background: #222226 !important;
+  border: 1px solid #111113 !important;
+  color: #f9f6f0 !important;
+  box-shadow: none !important;
+}
+
+.brand-title {
+  background: none !important;
+  -webkit-text-fill-color: var(--text-primary, #18181b) !important;
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.brand-subtitle {
+  color: var(--text-muted, #847e74) !important;
+}
+
+/* Nav Links */
+.navbar-center-nav .nav-link-item {
+  color: var(--text-secondary, #524f4a) !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  transition: color 0.15s ease !important;
+}
+
+.navbar-center-nav .nav-link-item:hover {
+  color: var(--text-primary, #18181b) !important;
+}
+
+.navbar-center-nav .nav-link-item.active {
+  color: var(--text-primary, #18181b) !important;
+  position: relative;
+}
+
+.navbar-center-nav .nav-link-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--text-primary, #18181b);
+}
+
+/* Search Bar */
+.navbar-search-bar {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.navbar-search-bar .search-icon {
+  color: var(--text-muted, #847e74) !important;
+}
+
+.navbar-search-bar .search-input-field {
+  color: var(--text-primary, #18181b) !important;
+}
+
+.navbar-search-bar .search-input-field::placeholder {
+  color: var(--text-dimmed, #b3aca0) !important;
+}
+
+.search-suggestions-dropdown {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  box-shadow: 0 8px 24px rgba(40, 30, 20, 0.1) !important;
+}
+
+.suggestions-header {
+  color: var(--text-muted, #847e74) !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.suggestion-item {
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.suggestion-item:hover {
+  background: var(--bg-card-hover, #f7f3eb) !important;
+}
+
+.suggestion-title {
+  color: var(--text-primary, #18181b) !important;
+}
+
+.suggestion-meta {
+  color: var(--text-secondary, #524f4a) !important;
+}
+
+/* City Trigger & Actions */
+.btn-city-trigger {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.btn-city-trigger:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+}
+
+.btn-my-bookings-trigger {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+.btn-my-bookings-trigger:hover {
+  background: #f7f3eb !important;
+}
+
+.user-profile-btn {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Secondary Navigation Tier */
+.navbar-secondary-tier {
+  background: #f3efe6 !important;
+  border-top: 1px solid var(--border-subtle, #eae4d8) !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.secondary-nav-link {
+  color: var(--text-secondary, #524f4a) !important;
+  font-weight: 500 !important;
+}
+
+.secondary-nav-link:hover,
+.secondary-nav-link.active {
+  color: var(--text-primary, #18181b) !important;
+}
+
+.secondary-nav-link.active::after {
+  background: var(--text-primary, #18181b) !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   3. SIDEBAR & CATALOG FILTERS
+   ========================================================================== */
+.cine-layout-container {
+  background: var(--bg-page, #f9f6f0) !important;
+}
+
+.cine-main-content {
+  background: var(--bg-page, #f9f6f0) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.cine-sidebar {
+  background: var(--bg-sidebar, #f3efe6) !important;
+  border-right: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.sidebar-group-title {
+  color: var(--text-muted, #847e74) !important;
+  font-weight: 700 !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.sidebar-browse-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary, #524f4a) !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.sidebar-browse-btn:hover {
+  background: rgba(34, 34, 38, 0.04) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.sidebar-browse-btn.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+.sidebar-pill-btn {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-secondary, #524f4a) !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+}
+
+.sidebar-pill-btn:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.sidebar-pill-btn.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+/* ==========================================================================
+   4. MOVIE CARDS & SHOWCASE GRID (Exhibition Catalog Style)
+   ========================================================================== */
+.movie-card-container {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(40, 30, 20, 0.04) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.movie-card-container:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(40, 30, 20, 0.08) !important;
+  border-color: #b3aca0 !important;
+}
+
+.movie-poster-wrap {
+  background: #ebe5dc !important;
+}
+
+.poster-top-badges .badge-cert {
+  background: rgba(34, 34, 38, 0.85) !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.poster-top-badges .badge-imax {
+  background: #607d9b !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.movie-card-info {
+  padding: 14px 16px !important;
+  background: #ffffff !important;
+}
+
+.movie-card-title {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.movie-card-genres {
+  color: var(--text-muted, #847e74) !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.02em !important;
+}
+
+.card-rating-row {
+  color: var(--text-secondary, #524f4a) !important;
+}
+
+.rating-score {
+  color: var(--text-primary, #18181b) !important;
+}
+
+/* Primary "Book Tickets" Action Button */
+.btn-card-book-action {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  transition: background 0.15s ease !important;
+  box-shadow: none !important;
+}
+
+.btn-card-book-action:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Section Headings */
+.showcase-header-row h2 {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.results-meta-pill {
+  background: #f0eae0 !important;
+  color: var(--text-secondary, #524f4a) !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+}
+
+/* Coming Soon & Curated Section Titles */
+.section-title-serif {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cine-coming-soon-section {
+  margin-top: 48px !important;
+  border-top: 1px solid var(--border-subtle, #eae4d8) !important;
+  padding-top: 32px !important;
+}
+
+.link-view-all {
+  color: var(--text-primary, #18181b) !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+.link-view-all:hover {
+  color: var(--color-accent-amber, #c2782f) !important;
+  gap: 7px !important;
+}
+
+/* ==========================================================================
+   5. SEAT SELECTION MODAL & 2D SEATING CHART (Club Amphitheater Arc)
+   ========================================================================== */
+.seat-modal-backdrop {
+  background: rgba(25, 20, 15, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.seat-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(30, 20, 10, 0.25) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.seat-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.seat-modal-title-row h2 {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.25rem !important;
+}
+
+.seat-modal-cinema-meta {
+  color: var(--text-secondary, #524f4a) !important;
+}
+
+.seat-modal-poster-thumb {
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+}
+
+/* Countdown Timer Badge */
+.countdown-timer-badge {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.countdown-timer-badge .timer-icon {
+  color: #c2782f !important;
+}
+
+.countdown-timer-badge.urgent {
+  background: #fdf1ee !important;
+  border-color: #f3d2c9 !important;
+  color: #b85244 !important;
+}
+
+/* View Mode Switcher */
+.view-mode-toggle-group {
+  background: #f0eae0 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 4px !important;
+}
+
+.btn-view-toggle {
+  color: var(--text-secondary, #524f4a) !important;
+  border-radius: 3px !important;
+}
+
+.btn-view-toggle.active {
+  background: #ffffff !important;
+  color: var(--text-primary, #18181b) !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.08) !important;
+}
+
+.btn-modal-close {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+.btn-modal-close:hover {
+  background: #f7f3eb !important;
+}
+
+/* "How Many Seats?" Party Selector Dialog */
+.how-many-seats-overlay {
+  background: rgba(25, 20, 15, 0.65) !important;
+}
+
+.how-many-seats-dialog {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 16px 40px rgba(30, 20, 10, 0.18) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.how-many-seats-dialog .dialog-header h3 {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif) !important;
+}
+
+.how-many-seats-dialog .dialog-header p {
+  color: var(--text-secondary, #524f4a) !important;
+}
+
+.seat-count-buttons-grid {
+  display: flex !important;
+  gap: 8px !important;
+  margin: 16px 0 !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.seat-count-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.seat-count-pill .seat-num {
+  display: block !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #18181b !important;
+  line-height: 1.1 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.seat-count-pill .seat-veh-name {
+  display: block !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  color: #524f4a !important;
+  margin-top: 3px !important;
+}
+
+.seat-count-pill:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+}
+
+.seat-count-pill.active {
+  background: #222226 !important;
+  border-color: #222226 !important;
+  box-shadow: 0 4px 12px rgba(34, 34, 38, 0.25) !important;
+}
+
+.seat-count-pill.active .seat-num {
+  color: #ffffff !important;
+}
+
+.seat-count-pill.active .seat-veh-name {
+  color: #e5ded2 !important;
+}
+
+/* Ticket Price Tiers Preview */
+.seat-tiers-price-preview {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 12px !important;
+  background: #f7f3eb !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  padding: 14px 16px !important;
+  margin: 16px 0 !important;
+}
+
+.tier-preview-col .tier-name {
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  color: #524f4a !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.tier-preview-col .tier-price {
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #c2782f !important;
+  font-family: var(--font-mono, monospace) !important;
+}
+
+.tier-preview-col .tier-avail {
+  font-size: 0.7rem !important;
+  color: #847e74 !important;
+}
+
+.btn-select-seats-cta {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.2) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-select-seats-cta:hover {
+  background: #000000 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-change-party-size {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+}
+
+.btn-change-party-size .edit-link {
+  color: #c2782f !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   6. 2D SEAT MATRIX AMPHITHEATER STYLES (Bio Fågel Blå Specific)
+   ========================================================================== */
+.seat-map-2d-container {
+  background: transparent !important;
+  padding: 24px 20px 40px !important;
+}
+
+/* Minimalist Cinema Screen */
+.screen-curved-bar {
+  background: #e5ded2 !important;
+  border-top: 3px solid #847e74 !important;
+  border-radius: 50% 50% 0 0 / 14px 14px 0 0 !important;
+  box-shadow: none !important;
+}
+
+.screen-label {
+  color: #524f4a !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+}
+
+.screen-curve-beam {
+  background: radial-gradient(ellipse at 50% 0%, rgba(132, 126, 116, 0.08) 0%, transparent 70%) !important;
+}
+
+/* Club Amphitheater Arc Seating Container */
+.amphitheater-arc-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.seat-map-quick-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto 16px;
+  padding: 0 4px;
+}
+
+.zoom-controls-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-seat-zoom {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid var(--border-medium, #d8d0c2);
+  border-radius: 4px;
+  color: var(--text-primary, #18181b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.05);
+}
+
+.btn-seat-zoom:hover {
+  background: #f7f3eb;
+  border-color: #222226;
+}
+
+.accessibility-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--border-medium, #d8d0c2);
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #607d9b;
+}
+
+/* Tier Section Dividers & Badges above seat rows */
+.tier-section-divider {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 18px 0 8px !important;
+}
+
+.tier-divider-line {
+  flex: 1 !important;
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  max-width: 180px !important;
+}
+
+.tier-divider-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 999px !important;
+  padding: 5px 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.tier-divider-badge .tier-name {
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.tier-divider-badge .tier-price-tag {
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  color: #c2782f !important;
+}
+
+.tier-divider-badge .tier-icon {
+  display: inline-block !important;
+}
+
+.tier-divider-badge .tier-icon.icon-amber {
+  color: #c2782f !important;
+}
+
+.tier-divider-badge .tier-icon.icon-purple {
+  color: #607d9b !important;
+}
+
+.row-letter-badge {
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: #d8d0c2 !important;
+  width: 22px !important;
+  text-align: center !important;
+}
+
+.seat-row-arc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.seats-in-arc-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+/* Armchair Seat Graphic Button */
+.armchair-seat-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  transform-origin: center bottom;
+}
+
+.armchair-seat-btn:hover:not(:disabled) {
+  transform: scale(1.18) !important;
+  z-index: 10;
+}
+
+.armchair-svg-icon {
+  width: 32px;
+  height: 28px;
+  display: block;
+}
+
+/* Armchair Color States */
+/* Available: Warm Stone / Ecru */
+.armchair-seat-btn.state-available .seat-backrest,
+.armchair-seat-btn.state-available .seat-cushion {
+  fill: #dfd9ce;
+  stroke: #cdc4b6;
+  stroke-width: 1.2px;
+}
+.armchair-seat-btn.state-available .seat-armrest {
+  fill: #d2cabb;
+  stroke: #cdc4b6;
+  stroke-width: 1.2px;
+}
+.armchair-seat-btn.state-available .seat-number-text {
+  fill: #524f4a;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Selected ("Valt"): Rich Cognac / Amber Leather */
+.armchair-seat-btn.state-selected .seat-backrest,
+.armchair-seat-btn.state-selected .seat-cushion {
+  fill: #c2782f;
+  stroke: #aa6522;
+  stroke-width: 1.5px;
+}
+.armchair-seat-btn.state-selected .seat-armrest {
+  fill: #b36b25;
+  stroke: #aa6522;
+  stroke-width: 1.5px;
+}
+.armchair-seat-btn.state-selected .seat-number-text {
+  fill: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+/* Booked: Muted Slate / Taupe */
+.armchair-seat-btn.state-booked {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.armchair-seat-btn.state-booked .seat-backrest,
+.armchair-seat-btn.state-booked .seat-cushion,
+.armchair-seat-btn.state-booked .seat-armrest {
+  fill: #a39c91;
+  stroke: #8f887e;
+  stroke-width: 1px;
+}
+.armchair-seat-btn.state-booked .seat-number-text {
+  fill: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Locked by Other: Warm Ochre */
+.armchair-seat-btn.state-locked-other {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.armchair-seat-btn.state-locked-other .seat-backrest,
+.armchair-seat-btn.state-locked-other .seat-cushion {
+  fill: #d59f7b;
+  stroke: #bd8662;
+}
+
+/* Status Alert Prompt Banner (Soft Blush Pink in Screenshot) */
+.seat-status-prompt-banner {
+  width: 100%;
+  max-width: 820px;
+  margin: 24px auto 16px;
+  background: var(--banner-alert-bg, #fdf1ee) !important;
+  border: 1px solid var(--banner-alert-border, #f3d2c9) !important;
+  border-radius: 4px !important;
+  padding: 10px 18px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--banner-alert-text, #6b3b33) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Legend Strip at Bottom */
+.seat-matrix-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.legend-chip-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border-medium, #d8d0c2);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary, #18181b);
+}
+
+.legend-count-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.legend-chip-box.available .legend-count-badge {
+  background: #dfd9ce;
+  color: #222226;
+}
+
+.legend-chip-box.selected .legend-count-badge {
+  background: #c2782f;
+  color: #ffffff;
+}
+
+.legend-chip-box.booked .legend-count-badge {
+  background: #a39c91;
+  color: #ffffff;
+}
+
+/* Bottom Booking Bar in Seat Modal */
+.seat-modal-bottom-bar {
+  background: #ffffff !important;
+  border-top: 1px solid var(--border-subtle, #eae4d8) !important;
+  padding: 16px 24px !important;
+}
+
+.selected-seats-summary-info {
+  color: var(--text-primary, #18181b) !important;
+}
+
+.seat-token-pill {
+  background: #f7f3eb !important;
+  border: 1px solid #c2782f !important;
+  color: #c2782f !important;
+  border-radius: 3px !important;
+  font-family: var(--font-mono) !important;
+}
+
+.total-amount-display {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+}
+
+.btn-proceed-checkout {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  transition: background 0.15s ease !important;
+}
+
+.btn-proceed-checkout:hover:not(:disabled) {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.btn-proceed-checkout:disabled {
+  background: #d8d0c2 !important;
+  color: #847e74 !important;
+  cursor: not-allowed !important;
+}
+
+/* ==========================================================================
+   7. SHOWTIME SELECTOR MODAL
+   ========================================================================== */
+.showtimes-modal-backdrop {
+  background: rgba(25, 20, 15, 0.65) !important;
+}
+
+.showtimes-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(30, 20, 10, 0.2) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.showtimes-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.showtime-title-line h2 {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif) !important;
+}
+
+/* Date Pills Strip */
+.showtimes-date-pills-bar {
+  background: #ede7da !important;
+  border-bottom: 1px solid #d8d0c2 !important;
+  padding: 14px 24px !important;
+}
+
+/* Unselected Date Pills - High Contrast & Clearly Visible */
+.date-pill,
+.date-option-pill {
+  background: #ffffff !important;
+  border: 1.5px solid #d4ccbd !important;
+  border-radius: 8px !important;
+  min-width: 72px !important;
+  padding: 9px 16px !important;
+  box-shadow: 0 2px 5px rgba(30, 20, 10, 0.06) !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease-in-out !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.date-pill .date-pill-day,
+.date-option-pill .date-pill-day {
+  color: #3f3c37 !important;
+  font-size: 0.74rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.2 !important;
+}
+
+.date-pill .date-pill-num,
+.date-option-pill .date-pill-num {
+  color: #111113 !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  margin: 3px 0 1px !important;
+}
+
+.date-pill .date-pill-month,
+.date-option-pill .date-pill-month {
+  color: #3f3c37 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* Hover state for unselected pills */
+.date-pill:hover,
+.date-option-pill:hover {
+  background: #fdfbf7 !important;
+  border-color: #222226 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 10px rgba(30, 20, 10, 0.12) !important;
+}
+
+.date-pill:hover .date-pill-day,
+.date-pill:hover .date-pill-num,
+.date-pill:hover .date-pill-month,
+.date-option-pill:hover .date-pill-day,
+.date-option-pill:hover .date-pill-num,
+.date-option-pill:hover .date-pill-month {
+  color: #111113 !important;
+}
+
+/* Active / Selected Date Pill */
+.date-pill.active,
+.date-option-pill.active {
+  background: #222226 !important;
+  border-color: #222226 !important;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+.date-pill.active .date-pill-day,
+.date-option-pill.active .date-pill-day {
+  color: #e5ded2 !important;
+  font-weight: 800 !important;
+}
+
+.date-pill.active .date-pill-num,
+.date-option-pill.active .date-pill-num {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.date-pill.active .date-pill-month,
+.date-option-pill.active .date-pill-month {
+  color: #c2782f !important;
+  font-weight: 800 !important;
+}
+
+.date-pill.active span,
+.date-option-pill.active span {
+  color: #ffffff !important;
+}
+
+.date-pill.active span.date-pill-month,
+.date-option-pill.active span.date-pill-month {
+  color: #c2782f !important;
+}
+
+.showtimes-filters-row {
+  background: #faf7f2 !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.showtimes-legend-bar {
+  background: #ede7da !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+  color: #3f3c37 !important;
+}
+
+.subfilter-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #3f3c37 !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
+.subfilter-pill:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+  color: #18181b !important;
+}
+
+.subfilter-pill.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+.no-shows-found-state h3 {
+  color: #18181b !important;
+}
+
+.no-shows-found-state p {
+  color: #524f4a !important;
+}
+
+.btn-reset-filters {
+  background: #222226 !important;
+  border-color: #222226 !important;
+  color: #ffffff !important;
+}
+
+.btn-reset-filters:hover {
+  background: #111113 !important;
+  border-color: #111113 !important;
+}
+
+.theatre-shows-card,
+.theatre-showtimes-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 4px rgba(30, 20, 10, 0.04) !important;
+}
+
+.theatre-card-header .theatre-name {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif) !important;
+}
+
+.btn-showtime-chip {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+.btn-showtime-chip:hover {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+/* ==========================================================================
+   8. FOOD & BEVERAGE MODAL (Artisanal Cafe Style)
+   ========================================================================== */
+.fnb-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.fnb-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.fnb-category-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-secondary, #524f4a) !important;
+  border-radius: 4px !important;
+}
+
+.fnb-category-pill.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+.fnb-item-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.fnb-item-name {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-serif) !important;
+}
+
+.fnb-item-desc {
+  color: var(--text-muted, #847e74) !important;
+}
+
+.fnb-item-price {
+  color: var(--text-primary, #18181b) !important;
+  font-family: var(--font-mono) !important;
+}
+
+.btn-fnb-add {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+.btn-fnb-add:hover {
+  background: #222226 !important;
+  color: #ffffff !important;
+}
+
+.fnb-qty-counter {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.fnb-bottom-checkout-bar {
+  background: #ffffff !important;
+  border-top: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.btn-fnb-proceed {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.btn-fnb-skip {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   9. PAYMENT & CHECKOUT MODAL (Ticketing Counter Receipt)
+   ========================================================================== */
+.payment-modal-backdrop {
+  background: rgba(25, 20, 15, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.payment-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(30, 20, 10, 0.25) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.payment-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+  padding: 12px 20px !important;
+}
+
+.payment-header-left h2 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.btn-back-seats {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 4px !important;
+  color: #18181b !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-back-seats:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+}
+
+/* 5-Minute Hold Banner (Soft Blush Nordic Heritage) */
+.payment-reservation-banner {
+  background: #fdf1ee !important;
+  border-bottom: 1px solid #f3d2c9 !important;
+  color: #6b3b33 !important;
+}
+
+.payment-reservation-banner.urgent {
+  background: #fdf1ee !important;
+  border-bottom-color: #f3d2c9 !important;
+  color: #6b3b33 !important;
+  animation: none !important;
+}
+
+.payment-reservation-banner .banner-title {
+  color: #6b3b33 !important;
+  font-weight: 700 !important;
+}
+
+.payment-reservation-banner .banner-desc {
+  color: #6b3b33 !important;
+}
+
+.payment-reservation-banner .banner-desc strong {
+  color: #c2782f !important;
+  font-family: var(--font-mono, monospace) !important;
+}
+
+.banner-urgent-pill {
+  background: #b85244 !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+  box-shadow: none !important;
+}
+
+/* Left Column: Order Review */
+.summary-movie-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.summary-movie-details h3 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.summary-info-line {
+  color: #524f4a !important;
+}
+
+.summary-meta-badges .badge-cert {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.summary-meta-badges .badge-format {
+  background: #607d9b !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.payment-fnb-summary-box {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  color: #18181b !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.payment-fnb-summary-box .fnb-box-title {
+  color: #18181b !important;
+  font-weight: 700 !important;
+}
+
+.fnb-item-receipt-row {
+  color: #524f4a !important;
+}
+
+.fnb-row-price {
+  color: #18181b !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+}
+
+/* Promo Code Section */
+.payment-promo-section {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.promo-header-row {
+  color: #18181b !important;
+  font-weight: 700 !important;
+}
+
+.promo-input-field {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+}
+
+.promo-input-field:focus {
+  border-color: #222226 !important;
+  box-shadow: 0 0 0 2px rgba(34, 34, 38, 0.1) !important;
+}
+
+.btn-apply-promo {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.btn-apply-promo:hover {
+  background: #000000 !important;
+}
+
+.applied-promo-card {
+  background: #f7f3eb !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 4px !important;
+}
+
+.applied-code-title {
+  color: #18181b !important;
+  font-weight: 700 !important;
+}
+
+.applied-code-desc {
+  color: #524f4a !important;
+}
+
+.btn-remove-promo {
+  color: #b85244 !important;
+  font-weight: 600 !important;
+}
+
+.quick-coupon-tag {
+  background: #f7f3eb !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #524f4a !important;
+  border-radius: 4px !important;
+}
+
+.quick-coupon-tag:hover {
+  background: #ffffff !important;
+  border-color: #222226 !important;
+  color: #18181b !important;
+}
+
+/* Fare Breakdown Receipt */
+.payment-bill-breakdown {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.payment-bill-breakdown h4 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.bill-row {
+  color: #524f4a !important;
+}
+
+.bill-row span:last-child {
+  color: #18181b !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 600 !important;
+}
+
+.bill-row.discount-row span:last-child {
+  color: #4a7c59 !important;
+}
+
+.bill-divider {
+  background: #eae4d8 !important;
+}
+
+.bill-total {
+  color: #18181b !important;
+  font-weight: 800 !important;
+}
+
+.bill-total span:first-child {
+  color: #18181b !important;
+}
+
+.total-highlight {
+  color: #18181b !important;
+  font-family: var(--font-mono) !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+}
+
+.ssl-security-badge {
+  background: #f3efe6 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+}
+
+.ssl-security-badge strong {
+  color: #18181b !important;
+}
+
+.ssl-security-badge p {
+  color: #524f4a !important;
+}
+
+/* Right Column: Payment Methods */
+.payment-form-col h4 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.method-tab {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #524f4a !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.03) !important;
+}
+
+.method-tab:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+  color: #18181b !important;
+}
+
+.method-tab.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+  box-shadow: none !important;
+}
+
+.method-tab.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* UPI Option */
+.upi-app-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #524f4a !important;
+  border-radius: 4px !important;
+}
+
+.upi-app-pill:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+  color: #18181b !important;
+}
+
+.upi-app-pill.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+.upi-method-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+}
+
+.upi-qr-scanner-mock {
+  background: #ffffff !important;
+  border: 1px solid #eae4d8 !important;
+  border-radius: 6px !important;
+}
+
+.qr-instruction {
+  color: #524f4a !important;
+}
+
+.upi-id-input-box label {
+  color: #524f4a !important;
+  font-weight: 600 !important;
+}
+
+.upi-hint {
+  color: #847e74 !important;
+}
+
+.upi-hint strong {
+  color: #18181b !important;
+}
+
+/* Credit / Debit Card */
+.cinema-visual-card {
+  background: linear-gradient(135deg, #222226 0%, #2e2e34 100%) !important;
+  border: 1px solid #44444c !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(30, 20, 10, 0.15) !important;
+}
+
+.cinema-visual-card::before {
+  display: none !important;
+}
+
+.card-brand {
+  color: #f0eae0 !important;
+  letter-spacing: 0.12em !important;
+}
+
+.card-chip {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.card-number-display {
+  color: #ffffff !important;
+}
+
+.card-lbl {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.card-val {
+  color: #ffffff !important;
+}
+
+.form-group label {
+  color: #524f4a !important;
+  font-weight: 600 !important;
+}
+
+.credit-input {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.credit-input:focus {
+  border-color: #222226 !important;
+  box-shadow: 0 0 0 2px rgba(34, 34, 38, 0.1) !important;
+  background: #ffffff !important;
+}
+
+/* Net Banking Option */
+.netbank-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(30, 20, 10, 0.03) !important;
+}
+
+.netbank-card:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+}
+
+.netbank-card.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+  box-shadow: none !important;
+}
+
+/* Final Submit Payment Button */
+.btn-submit-payment {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.2) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-submit-payment:hover:not(:disabled) {
+  background: #000000 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3) !important;
+  filter: none !important;
+}
+
+.btn-submit-payment:active:not(:disabled) {
+  transform: translateY(0) !important;
+}
+
+.payment-terms-notice {
+  color: #847e74 !important;
+  font-size: 0.75rem !important;
+}
+
+/* Expired View in Checkout */
+.payment-expired-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  color: var(--text-primary, #18181b) !important;
+  box-shadow: 0 12px 32px rgba(30, 20, 10, 0.1) !important;
+}
+
+.expired-icon-wrap {
+  background: #fdf1ee !important;
+  border: 1px solid #f3d2c9 !important;
+  color: #b85244 !important;
+}
+
+.expired-badge {
+  background: #fdf1ee !important;
+  border: 1px solid #f3d2c9 !important;
+  color: #6b3b33 !important;
+}
+
+.payment-expired-card h3 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  color: #18181b !important;
+}
+
+.payment-expired-card p {
+  color: #524f4a !important;
+}
+
+.payment-expired-card p strong {
+  color: #b85244 !important;
+}
+
+.btn-expired-primary {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+}
+
+.btn-expired-primary:hover {
+  background: #000000 !important;
+}
+
+.btn-expired-secondary {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+}
+
+.btn-expired-secondary:hover {
+  background: #f7f3eb !important;
+}
+
+/* ==========================================================================
+   10. TICKET CONFIRMATION PASS (Vintage Perforated Pass)
+   ========================================================================== */
+.ticket-confirmation-container {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 16px 40px rgba(30, 20, 10, 0.15) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.ticket-header-lead {
+  border-bottom: 2px dashed #d8d0c2 !important;
+}
+
+.ticket-movie-title {
+  font-family: var(--font-serif) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.ticket-qr-section {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-subtle, #eae4d8) !important;
+  border-radius: 6px !important;
+}
+
+.btn-download-ticket {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   11. AUTHENTICATION PAGE (Boutique Heritage Portal)
+   ========================================================================== */
+.cine-auth-root {
+  background: #f9f6f0 !important;
+}
+
+.cine-auth-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 32px rgba(30, 20, 10, 0.08) !important;
+}
+
+.cine-auth-field input {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: var(--text-primary, #18181b) !important;
+  border-radius: 4px !important;
+}
+
+.btn-auth-submit {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.btn-auth-submit:hover {
+  background: #000000 !important;
+}
+
+/* ==========================================================================
+   12. MOVIE DETAIL MODAL (Exhibition Feature Showcase)
+   ========================================================================== */
+.movie-detail-modal-backdrop {
+  background: rgba(25, 20, 15, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.movie-detail-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(30, 20, 10, 0.25) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.modal-content-inner {
+  background: #faf7f2 !important;
+}
+
+.modal-info-col {
+  color: #18181b !important;
+}
+
+.modal-title-row h2 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  font-size: 1.65rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.modal-badges-wrap .badge-cert {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.rating-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+}
+
+.star-icon-filled {
+  color: #c2782f !important;
+  fill: #c2782f !important;
+}
+
+.votes-count {
+  color: #847e74 !important;
+}
+
+.modal-meta-pills .meta-pill {
+  color: #524f4a !important;
+  font-weight: 500 !important;
+}
+
+.modal-genre-tags .genre-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #524f4a !important;
+  border-radius: 4px !important;
+}
+
+.modal-synopsis-section h4 {
+  color: #847e74 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.modal-synopsis-section p {
+  color: #524f4a !important;
+  font-size: 0.92rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Cast & Crew Section */
+.modal-crew-section {
+  margin-top: 14px !important;
+  border-top: 1px solid var(--border-subtle, #eae4d8) !important;
+  padding-top: 14px !important;
+}
+
+.crew-section-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.crew-section-header h4 {
+  color: #847e74 !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+}
+
+.crew-members-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.crew-member-card {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.crew-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #222226 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  font-family: var(--font-mono) !important;
+}
+
+.crew-meta {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.crew-name {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+
+.crew-role {
+  font-size: 0.7rem !important;
+  color: #847e74 !important;
+  font-weight: 500 !important;
+}
+
+/* Movie Detail Action Buttons */
+.btn-modal-book-tickets {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.2) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-modal-book-tickets:hover {
+  background: #000000 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-modal-trailer {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
+.btn-modal-trailer:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+}
+
+/* ==========================================================================
+   13. MY BOOKINGS, CITY SELECTOR & OFFERS MODALS
+   ========================================================================== */
+.bookings-modal-backdrop,
+.city-modal-backdrop,
+.offers-modal-backdrop,
+.trailer-modal-backdrop {
+  background: rgba(25, 20, 15, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.bookings-modal-container,
+.city-modal-container,
+.offers-modal-container,
+.trailer-modal-container {
+  background: #faf7f2 !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(30, 20, 10, 0.25) !important;
+  color: var(--text-primary, #18181b) !important;
+}
+
+.bookings-modal-header,
+.city-modal-header,
+.offers-modal-header,
+.trailer-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--border-subtle, #eae4d8) !important;
+}
+
+.bookings-header-title h2,
+.city-modal-header-left h3,
+.offers-title-row h3 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  color: #18181b !important;
+}
+
+.bookings-header-title p,
+.city-modal-header-left p,
+.offers-title-row p {
+  color: #524f4a !important;
+}
+
+/* My Bookings tabs */
+.bookings-tabs-bar {
+  background: #f0eae0 !important;
+  border-bottom: 1px solid var(--border-medium, #d8d0c2) !important;
+}
+
+.bookings-tabs-bar .tab-btn {
+  color: #524f4a !important;
+  font-weight: 600 !important;
+}
+
+.bookings-tabs-bar .tab-btn.active {
+  background: #ffffff !important;
+  color: #18181b !important;
+  border-bottom: 2px solid #222226 !important;
+}
+
+.booking-item-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04) !important;
+}
+
+.booking-item-card h3 {
+  font-family: var(--font-serif, "Playfair Display", serif) !important;
+  color: #18181b !important;
+}
+
+.btn-view-pass {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.btn-view-pass:hover {
+  background: #000000 !important;
+}
+
+.btn-cancel-booking {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #b85244 !important;
+  border-radius: 4px !important;
+}
+
+.btn-cancel-booking:hover {
+  background: #fdf1ee !important;
+  border-color: #b85244 !important;
+}
+
+/* City Modal Search & Grid */
+.city-modal-search-wrapper {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 4px !important;
+}
+
+.city-modal-search-input {
+  color: #18181b !important;
+}
+
+.city-chip-btn {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #524f4a !important;
+  border-radius: 4px !important;
+}
+
+.city-chip-btn:hover {
+  background: #f7f3eb !important;
+  border-color: #222226 !important;
+  color: #18181b !important;
+}
+
+.city-chip-btn.active {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+/* Offers Modal */
+.offer-promo-card {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  border-radius: 6px !important;
+}
+
+.offer-code-pill {
+  background: #f7f3eb !important;
+  border: 1px solid #c2782f !important;
+  color: #c2782f !important;
+}
+
+.btn-copy-code {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   14. GLOBAL COLOR HARMONIZATION (Blue/Pink Eliminators)
+   ========================================================================== */
+.btn-overlay-circle {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(34, 34, 38, 0.3) !important;
+  transition: transform 0.2s ease, background 0.15s ease !important;
+}
+
+.btn-overlay-circle:hover {
+  background: #000000 !important;
+  transform: scale(1.1) !important;
+}
+
+.icon-cyan {
+  color: #607d9b !important;
+}
+
+.icon-crimson {
+  color: #c2782f !important;
+}
+
+.icon-amber {
+  color: #c2782f !important;
+}
+
+.icon-emerald {
+  color: #4a7c59 !important;
+}
+
+.text-emerald {
+  color: #4a7c59 !important;
+}
+
+.highlight-time {
+  color: #c2782f !important;
+  font-weight: 700 !important;
+}
+
+.badge-format {
+  background: #607d9b !important;
+  color: #ffffff !important;
+  border-radius: 3px !important;
+}
+
+.btn-showtime-pill {
+  background: #ffffff !important;
+  border: 1px solid var(--border-medium, #d8d0c2) !important;
+  color: #18181b !important;
+  border-radius: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-showtime-pill:hover {
+  background: #222226 !important;
+  color: #ffffff !important;
+  border-color: #222226 !important;
+}
+
+.btn-showtime-pill:hover .showtime-time,
+.btn-showtime-pill:hover .showtime-format {
+  color: #ffffff !important;
+}

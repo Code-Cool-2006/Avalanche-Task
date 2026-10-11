@@ -8,7 +8,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-  background: #120724;
+  background: #181512;
   color: #f1f5f9;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   overflow: hidden;
@@ -20,13 +20,13 @@
 
 .cine-hero-panel {
   position: relative;
-  background: radial-gradient(circle at 70% 35%, #381665 0%, #220e3d 48%, #120724 100%);
+  background: radial-gradient(circle at 70% 35%, #2a2520 0%, #1e1b17 48%, #141210 100%);
   padding: 44px 56px 36px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Background ambient cinema star glows */
@@ -88,14 +88,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(36, 15, 66, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
   padding: 5px 14px 5px 6px;
   font-size: 0.76rem;
   font-weight: 600;
   color: #f1ecf9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(8px);
 }
 
@@ -115,13 +115,13 @@
 .cine-top-links .nav-item {
   font-size: 0.88rem;
   font-weight: 500;
-  color: #c5b8dc;
+  color: #b3aca0;
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .cine-top-links .nav-item:hover {
-  color: #f4b815;
+  color: #c2782f;
 }
 
 /* Hero Body & Copy */
@@ -144,7 +144,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.18em;
-  color: #9d8db8;
+  color: #c2782f;
   margin-bottom: 16px;
   text-transform: uppercase;
 }
@@ -160,15 +160,15 @@
 
 .cine-hero-heading em {
   font-style: italic;
-  color: #f4b815;
+  color: #c2782f;
   font-weight: 600;
-  text-shadow: 0 0 20px rgba(244, 184, 21, 0.35);
+  text-shadow: 0 0 20px rgba(194, 120, 47, 0.35);
 }
 
 .cine-hero-desc {
   font-size: 0.95rem;
   line-height: 1.55;
-  color: #b7a9ce;
+  color: #b3aca0;
   margin: 0;
 }
 
@@ -246,13 +246,13 @@
    ========================================================= */
 
 .cine-form-panel {
-  background: #faf6ed;
+  background: #f9f6f0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 48px;
   position: relative;
-  color: #1a0f2e;
+  color: #18181b;
 }
 
 .cine-form-box {
@@ -269,7 +269,7 @@
   gap: 6px;
   background: none;
   border: 0;
-  color: #716682;
+  color: #524f4a;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -279,7 +279,7 @@
 }
 
 .cine-back-btn:hover {
-  color: #1a0f2e;
+  color: #18181b;
 }
 
 /* Top Form Generated Badge */
@@ -293,8 +293,8 @@
   width: 54px;
   height: 54px;
   object-fit: contain;
-  border-radius: 12px;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.12));
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
 }
 
 /* Form Titles */
@@ -302,14 +302,14 @@
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 2.1rem;
   font-weight: 800;
-  color: #180d2c;
+  color: #18181b;
   margin: 0 0 6px;
   letter-spacing: -0.01em;
 }
 
 .cine-form-sub {
   font-size: 0.88rem;
-  color: #756c84;
+  color: #524f4a;
   margin: 0 0 24px;
   line-height: 1.45;
 }
@@ -324,7 +324,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: #473e55;
+  color: #524f4a;
   margin-bottom: 6px;
   text-transform: uppercase;
 }
@@ -338,7 +338,7 @@
 .cine-input-icon {
   position: absolute;
   left: 14px;
-  color: #9a90a8;
+  color: #847e74;
   pointer-events: none;
   transition: color 0.2s;
 }
@@ -348,29 +348,29 @@
   box-sizing: border-box;
   padding: 13px 40px 13px 40px;
   background: #ffffff;
-  color: #1a0f2e;
-  border: 1px solid #e7ded0;
-  border-radius: 12px;
+  color: #18181b;
+  border: 1px solid #d8d0c2;
+  border-radius: 4px;
   font-family: inherit;
   font-size: 0.92rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(30, 20, 10, 0.03);
 }
 
 .cine-input-wrap input::placeholder {
-  color: #a49baa;
+  color: #b3aca0;
   font-weight: 400;
 }
 
 .cine-input-wrap:focus-within .cine-input-icon {
-  color: #1a0f2e;
+  color: #18181b;
 }
 
 .cine-input-wrap input:focus {
   outline: none;
-  border-color: #f4b815;
-  box-shadow: 0 0 0 3px rgba(244, 184, 21, 0.22);
+  border-color: #222226;
+  box-shadow: 0 0 0 2px rgba(34, 34, 38, 0.12);
 }
 
 .cine-eye-btn {
@@ -378,9 +378,9 @@
   right: 8px;
   background: none;
   border: 0;
-  color: #9a90a8;
+  color: #847e74;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -389,7 +389,7 @@
 }
 
 .cine-eye-btn:hover {
-  color: #1a0f2e;
+  color: #18181b;
 }
 
 .cine-forgot-row {
@@ -401,7 +401,7 @@
 .cine-link-inline {
   background: none;
   border: 0;
-  color: #655b74;
+  color: #524f4a;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -410,35 +410,36 @@
 }
 
 .cine-link-inline:hover {
-  color: #1a0f2e;
+  color: #18181b;
   text-decoration: underline;
 }
 
-/* Primary CTA Button (Golden Yellow) */
+/* Primary CTA Button (Nordic Charcoal) */
 .cine-btn-cta {
   width: 100%;
   padding: 13px 20px;
   border: none;
-  border-radius: 12px;
-  background: #f4b815;
-  color: #180d2c;
+  border-radius: 4px;
+  background: #222226;
+  color: #ffffff;
   font-family: inherit;
   font-size: 0.86rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(244, 184, 21, 0.35);
+  box-shadow: 0 2px 8px rgba(30, 20, 10, 0.1);
   transition: all 0.2s ease;
 }
 
 .cine-btn-cta:hover:not(:disabled) {
-  background: #fbbd18;
+  background: #000000;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(244, 184, 21, 0.45);
+  box-shadow: 0 4px 14px rgba(30, 20, 10, 0.15);
 }
 
 .cine-btn-cta:active:not(:disabled) {
@@ -513,14 +514,14 @@
 .cine-switch-prompt {
   text-align: center;
   font-size: 0.82rem;
-  color: #756c84;
+  color: #524f4a;
   margin: 0;
 }
 
 .cine-link-action {
   background: none;
   border: 0;
-  color: #180d2c;
+  color: #c2782f;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -530,28 +531,28 @@
 }
 
 .cine-link-action:hover {
-  color: #b8860b;
+  color: #a36122;
 }
 
 /* Alerts */
 .cine-msg {
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 0.84rem;
   margin-bottom: 14px;
   font-weight: 500;
 }
 
 .cine-msg.err {
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
+  background: #fdf1ee;
+  border: 1px solid #f3d2c9;
+  color: #b85244;
 }
 
 .cine-msg.ok {
-  background: #dcfce7;
-  border: 1px solid #86efac;
-  color: #166534;
+  background: #edf5f0;
+  border: 1px solid #cce3d4;
+  color: #2e5939;
 }
 
 /* OTP numeric input */
@@ -563,16 +564,16 @@
   letter-spacing: 0.5em;
   padding: 12px;
   background: #ffffff;
-  color: #1a0f2e;
-  border: 1px solid #e7ded0;
-  border-radius: 12px;
+  color: #18181b;
+  border: 1px solid #d8d0c2;
+  border-radius: 4px;
   font-family: monospace;
 }
 
 .cine-otp-input:focus {
   outline: none;
-  border-color: #f4b815;
-  box-shadow: 0 0 0 3px rgba(244, 184, 21, 0.22);
+  border-color: #222226;
+  box-shadow: 0 0 0 2px rgba(34, 34, 38, 0.12);
 }
 
 /* =========================================================
