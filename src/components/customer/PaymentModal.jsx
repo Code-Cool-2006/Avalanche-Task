@@ -18,12 +18,13 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
+import { useAuth } from "../../auth/AuthContext";
 import {
   confirmBookingAndPay,
   applyPromoCode,
   expirePendingBooking,
+  getPromoCodes,
 } from "../../services/customerBookingService";
-import { PROMO_CODES } from "../../data/mockCinemaData";
 
 export default function PaymentModal({
   pendingBooking,
@@ -32,12 +33,15 @@ export default function PaymentModal({
   onClose,
   onReservationExpired,
 }) {
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("upi"); // "upi" | "card" | "netbanking"
   const [upiOption, setUpiOption] = useState("gpay"); // "gpay" | "phonepe" | "paytm" | "qr"
   const [cardNumber, setCardNumber] = useState("4532 •••• •••• 8892");
   const [cardExpiry, setCardExpiry] = useState("08/29");
   const [cardCvv, setCardCvv] = useState("482");
-  const [cardholderName, setCardholderName] = useState("Alex Mercer");
+  const [cardholderName, setCardholderName] = useState(user?.name || "Cinema Member");
+
+  const promoCodes = getPromoCodes();
 
   // Promo code state
   const [promoInput, setPromoInput] = useState("");
@@ -122,7 +126,7 @@ export default function PaymentModal({
     setPromoError("");
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (isExpired || timeLeft <= 0) {
       setIsExpired(true);
       expirePendingBooking(pendingBooking.id);
@@ -133,33 +137,31 @@ export default function PaymentModal({
     setIsProcessing(true);
     setError("");
 
-    setTimeout(() => {
-      try {
-        let paymentDesc = "Credit Card (ending in 8892)";
-        if (paymentMethod === "upi") {
-          paymentDesc =
-            upiOption === "qr"
-              ? "UPI Instant QR Scan"
-              : upiOption === "gpay"
-              ? "Google Pay UPI"
-              : upiOption === "phonepe"
-              ? "PhonePe UPI"
-              : "Paytm UPI";
-        } else if (paymentMethod === "netbanking") {
-          paymentDesc = "Net Banking (HDFC Bank)";
-        }
-
-        const confirmedBooking = confirmBookingAndPay(pendingBooking.id, paymentDesc);
-        setIsProcessing(false);
-        onPaymentSuccess(confirmedBooking);
-      } catch (err) {
-        setIsProcessing(false);
-        if (err.message && err.message.toLowerCase().includes("expired")) {
-          setIsExpired(true);
-        }
-        setError(err.message || "Payment authorization failed.");
+    try {
+      let paymentDesc = "Credit Card (ending in 8892)";
+      if (paymentMethod === "upi") {
+        paymentDesc =
+          upiOption === "qr"
+            ? "UPI Instant QR Scan"
+            : upiOption === "gpay"
+            ? "Google Pay UPI"
+            : upiOption === "phonepe"
+            ? "PhonePe UPI"
+            : "Paytm UPI";
+      } else if (paymentMethod === "netbanking") {
+        paymentDesc = "Net Banking (HDFC Bank)";
       }
-    }, 1300);
+
+      const confirmedBooking = await confirmBookingAndPay(pendingBooking.id, paymentDesc);
+      setIsProcessing(false);
+      onPaymentSuccess(confirmedBooking);
+    } catch (err) {
+      setIsProcessing(false);
+      if (err.message && err.message.toLowerCase().includes("expired")) {
+        setIsExpired(true);
+      }
+      setError(err.message || "Payment authorization failed.");
+    }
   };
 
   const showDateFormatted = pendingBooking.show_time
@@ -378,7 +380,7 @@ export default function PaymentModal({
               {/* Quick voucher pill suggestions */}
               {!appliedPromo && (
                 <div className="quick-vouchers-strip">
-                  {PROMO_CODES.slice(0, 3).map((p) => (
+                  {promoCodes.slice(0, 3).map((p) => (
                     <button
                       key={p.code}
                       type="button"
@@ -517,7 +519,7 @@ export default function PaymentModal({
                       <label>Enter UPI Virtual ID (VPA)</label>
                       <input
                         type="text"
-                        defaultValue="alexmercer@okhdfcbank"
+                        defaultValue={user?.email ? `${user.email.split('@')[0]}@okhdfcbank` : "user@okhdfcbank"}
                         className="credit-input"
                       />
                       <span className="upi-hint">

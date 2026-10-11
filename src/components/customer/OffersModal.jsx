@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { X, Sparkles, Check, Copy, Gift } from "lucide-react";
-import { PROMO_CODES } from "../../data/mockCinemaData";
+import { getPromoCodes } from "../../services/customerBookingService";
 
 export default function OffersModal({ onClose }) {
   const [copiedCode, setCopiedCode] = useState(null);
+  const promoCodes = getPromoCodes();
 
   const handleCopy = (code) => {
     navigator.clipboard?.writeText(code).catch(() => {});
@@ -40,7 +41,7 @@ export default function OffersModal({ onClose }) {
         </div>
 
         <div className="offers-modal-list">
-          {PROMO_CODES.map((promo) => {
+          {promoCodes.map((promo) => {
             const isCopied = copiedCode === promo.code;
             return (
               <div key={promo.code} className="offer-promo-card">

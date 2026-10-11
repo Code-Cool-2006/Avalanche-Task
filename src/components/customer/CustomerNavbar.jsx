@@ -9,7 +9,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
-import { INITIAL_MOVIES } from "../../data/mockCinemaData";
 
 export default function CustomerNavbar({
   selectedCity,
@@ -21,6 +20,7 @@ export default function CustomerNavbar({
   onSelectMovieDirect,
   onSelectFilter,
   onOpenOffers,
+  movies = [],
 }) {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const { user, logout } = useAuth();
@@ -28,13 +28,15 @@ export default function CustomerNavbar({
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "V";
 
   const searchSuggestions = searchQuery.trim().length >= 1
-    ? INITIAL_MOVIES.filter((m) => {
+    ? movies.filter((m) => {
         const q = searchQuery.toLowerCase();
         return (
-          m.title.toLowerCase().includes(q) ||
-          m.genre?.some((g) => g.toLowerCase().includes(q)) ||
+          m.title?.toLowerCase().includes(q) ||
+          (Array.isArray(m.genre)
+            ? m.genre.some((g) => g.toLowerCase().includes(q))
+            : String(m.genre).toLowerCase().includes(q)) ||
           m.director?.toLowerCase().includes(q) ||
-          m.cast?.some((c) => c.name.toLowerCase().includes(q))
+          m.cast?.some((c) => c.name?.toLowerCase().includes(q))
         );
       }).slice(0, 4)
     : [];

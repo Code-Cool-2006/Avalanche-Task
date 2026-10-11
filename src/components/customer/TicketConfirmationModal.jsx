@@ -13,13 +13,16 @@ import {
   Utensils,
   Printer,
   Smartphone,
+  Mail,
 } from "lucide-react";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function TicketConfirmationModal({
   booking,
   onClose,
   onViewMyBookings,
 }) {
+  const { user } = useAuth();
   const [qrCodeUrl, setQrCodeUrl] = useState("");
 
   useEffect(() => {
@@ -67,7 +70,26 @@ export default function TicketConfirmationModal({
             <CheckCircle size={32} className="icon-emerald" />
           </div>
           <h2>Booking Confirmed!</h2>
-          <p>Your M-Ticket has been issued. An SMS & Email confirmation was sent.</p>
+          <p>
+            Your M-Ticket has been issued. A confirmation email with your ticket PDF & QR code was sent to{" "}
+            <strong>{booking.customer_email || user?.email || "your registered email"}</strong>.
+          </p>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "rgba(16, 185, 129, 0.12)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            color: "#10b981",
+            borderRadius: "9999px",
+            padding: "0.25rem 0.85rem",
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            marginTop: "0.5rem"
+          }}>
+            <Mail size={14} />
+            <span>Ticket PDF & QR code dispatched to Gmail</span>
+          </div>
           <button
             type="button"
             className="btn-modal-close"

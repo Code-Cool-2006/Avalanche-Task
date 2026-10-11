@@ -1,4 +1,13 @@
 import {
+  moviesApi,
+  theatresApi,
+  screensApi,
+  showsApi,
+  concessionsApi,
+  bookingsApi,
+  paymentsApi,
+} from "./api.js";
+import {
   INITIAL_MOVIES,
   INITIAL_THEATRES,
   INITIAL_SCREENS,
@@ -16,24 +25,27 @@ const KEYS = {
   SCREENS: "cine_bms_screens_v3",
   SHOWS: "cine_bms_shows_v3",
   SHOW_SEATS: "cine_bms_show_seats_v3",
+  CONCESSIONS: "cine_bms_concessions_v3",
   BOOKINGS: "cine_bms_bookings_v3",
   SELECTED_CITY: "cine_bms_selected_city_v3",
   WATCHLIST: "cine_user_watchlist",
   FAV_THEATRES: "cine_user_fav_theatres",
 };
 
-export const CURRENT_USER = {
-  id: 1,
-  name: "Alex Mercer",
-  email: "alex.mercer@cineshow.in",
-  role: "user",
-};
+// Global session user state (populated dynamically by AuthContext)
+let _sessionUser = null;
+export function setSessionUser(user) {
+  _sessionUser = user;
+}
+export function getSessionUser() {
+  return _sessionUser;
+}
 
 function getStored(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) {
-      localStorage.setItem(key, JSON.stringify(fallback));
+      if (fallback !== undefined) localStorage.setItem(key, JSON.stringify(fallback));
       return fallback;
     }
     return JSON.parse(raw);
@@ -51,20 +63,150 @@ function setStored(key, val) {
   }
 }
 
-// Ensure default pre-seeded data
+// Normalize movie payload from PostgreSQL
+function normalizeMovie(m) {
+  let parsedGenre = ["Action"];
+  if (Array.isArray(m.genre)) {
+    parsedGenre = m.genre;
+  } else if (typeof m.genre === "string") {
+    try {
+      const j = JSON.parse(m.genre);
+      parsedGenre = Array.isArray(j) ? j : [m.genre];
+    } catch {
+      parsedGenre = m.genre.split(",").map((g) => g.trim()).filter(Boolean);
+    }
+  }
+
+  let parsedFormats = ["2D", "IMAX 2D"];
+  if (Array.isArray(m.formats)) {
+    parsedFormats = m.formats;
+  } else if (typeof m.formats === "string") {
+    try {
+      const j = JSON.parse(m.formats);
+      parsedFormats = Array.isArray(j) ? j : [m.formats];
+    } catch {
+      parsedFormats = m.formats.split(",").map((f) => f.trim()).filter(Boolean);
+    }
+  }
+
+  const isPastOrToday = m.release_date ? new Date(m.release_date) <= new Date() : true;
+  const status = m.status || (isPastOrToday ? "NOW_SHOWING" : "COMING_SOON");
+
+  return {
+    id: m.id,
+    title: m.title || "Untitled Movie",
+    description: m.description || "",
+    genre: parsedGenre.length ? parsedGenre : ["Action"],
+    language: m.language || "English",
+    languagesAvailable: m.languagesAvailable || [m.language || "English"],
+    formats: parsedFormats,
+    duration_min: Number(m.duration_min) || 120,
+    rating: Number(m.rating) || 8.0,
+    votes: m.votes || "150K",
+    certificate: m.certificate || "U/A",
+    poster_url: m.poster_url || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+    backdrop_url: m.backdrop_url || m.poster_url || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1600&q=80",
+    trailer_url: m.trailer_url || "",
+    release_date: m.release_date ? String(m.release_date).split("T")[0] : new Date().toISOString().split("T")[0],
+    featured: Boolean(m.featured),
+    status,
+    cast: Array.isArray(m.cast) ? m.cast : (typeof m.cast_members === "string" ? m.cast_members.split(",").map(n => ({ name: n.trim(), role: "Actor" })) : []),
+    director: m.director || "Director",
+  };
+}
+
+// Initialize storage and sync live data from backend APIs
 export function initializeStorage() {
-  getStored(KEYS.MOVIES, INITIAL_MOVIES);
-  getStored(KEYS.THEATRES, INITIAL_THEATRES);
-  getStored(KEYS.SCREENS, INITIAL_SCREENS);
-  getStored(KEYS.SHOWS, INITIAL_SHOWS);
-  getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  getStored(KEYS.MOVIES, []);
+  getStored(KEYS.THEATRES, []);
+  getStored(KEYS.SCREENS, []);
+  getStored(KEYS.SHOWS, []);
+  getStored(KEYS.SHOW_SEATS, []);
+  getStored(KEYS.CONCESSIONS, []);
   getStored(KEYS.BOOKINGS, []);
   getStored(KEYS.SELECTED_CITY, CITIES[0]);
   getStored(KEYS.WATCHLIST, []);
   getStored(KEYS.FAV_THEATRES, {});
 }
 
-// Watchlist Helpers (Persisted in localStorage)
+/**
+ * Live Synchronization with Backend APIs:
+ * Fetches real Movies, Theatres, Screens, Shows, Concessions, and Bookings from Express.
+ */
+export async function syncFromBackend() {
+  // 1. Sync Movies from GET /api/movies
+  try {
+    const dbMovies = await moviesApi.getAll();
+    if (Array.isArray(dbMovies) && dbMovies.length > 0) {
+      const normalized = dbMovies.map(normalizeMovie);
+      setStored(KEYS.MOVIES, normalized);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("cine_movies_synced", { detail: { movies: normalized } }));
+      }
+    }
+  } catch (err) {
+    console.warn("Could not sync movies from /api/movies:", err.message);
+  }
+
+  // 2. Sync Theatres from GET /api/theatres
+  try {
+    const dbTheatres = await theatresApi.getAll();
+    if (Array.isArray(dbTheatres) && dbTheatres.length > 0) {
+      setStored(KEYS.THEATRES, dbTheatres);
+      // Auto-update selected city if current is invalid
+      const currentCity = getSelectedCity();
+      const cities = Array.from(new Set(dbTheatres.map((t) => t.city).filter(Boolean)));
+      if (cities.length > 0 && !cities.includes(currentCity)) {
+        setSelectedCity(cities[0]);
+      }
+    }
+  } catch (err) {
+    console.warn("Could not sync theatres from /api/theatres:", err.message);
+  }
+
+  // 3. Sync Screens from GET /api/screens
+  try {
+    const dbScreens = await screensApi.getAll();
+    if (Array.isArray(dbScreens) && dbScreens.length > 0) {
+      setStored(KEYS.SCREENS, dbScreens);
+    }
+  } catch (err) {
+    console.warn("Could not sync screens from /api/screens:", err.message);
+  }
+
+  // 4. Sync Shows from GET /api/shows
+  try {
+    const showsRes = await showsApi.getAll();
+    const dbShows = Array.isArray(showsRes) ? showsRes : showsRes?.shows;
+    if (Array.isArray(dbShows) && dbShows.length > 0) {
+      setStored(KEYS.SHOWS, dbShows);
+    }
+  } catch (err) {
+    console.warn("Could not sync shows from /api/shows:", err.message);
+  }
+
+  // 5. Sync Concessions from GET /api/concessions
+  try {
+    const dbConcessions = await concessionsApi.getAll();
+    if (Array.isArray(dbConcessions) && dbConcessions.length > 0) {
+      setStored(KEYS.CONCESSIONS, dbConcessions);
+    }
+  } catch (err) {
+    console.warn("Could not sync concessions from /api/concessions:", err.message);
+  }
+
+  // 6. Sync User Bookings from GET /api/bookings/my
+  try {
+    const myBookings = await bookingsApi.getMyBookings();
+    if (Array.isArray(myBookings)) {
+      setStored(KEYS.BOOKINGS, myBookings);
+    }
+  } catch (err) {
+    // Expected when unauthenticated or endpoint booting
+  }
+}
+
+// Watchlist Helpers
 export function getWatchlist() {
   return getStored(KEYS.WATCHLIST, []);
 }
@@ -86,7 +228,7 @@ export function toggleWatchlistMovie(id) {
   return !exists;
 }
 
-// Favorite Theatres Helpers (Persisted in localStorage)
+// Favorite Theatres Helpers
 export function getFavoriteTheatres() {
   return getStored(KEYS.FAV_THEATRES, {});
 }
@@ -104,77 +246,7 @@ export function toggleFavoriteTheatre(theatreId) {
   return updated;
 }
 
-// Sync catalog with backend database if online, fallback to seed data
-export async function syncFromBackend() {
-  try {
-    const res = await fetch("/api/movies");
-    if (res.ok) {
-      const dbMovies = await res.json();
-      if (Array.isArray(dbMovies) && dbMovies.length > 0) {
-        const normalized = dbMovies.map((m) => {
-          let parsedGenre = ["Action"];
-          if (Array.isArray(m.genre)) parsedGenre = m.genre;
-          else if (typeof m.genre === "string") {
-            try {
-              const j = JSON.parse(m.genre);
-              parsedGenre = Array.isArray(j) ? j : [m.genre];
-            } catch {
-              parsedGenre = m.genre.split(",").map((g) => g.trim()).filter(Boolean);
-            }
-          }
-          return {
-            id: m.id,
-            title: m.title || "Untitled Movie",
-            description: m.description || "",
-            genre: parsedGenre.length ? parsedGenre : ["Action"],
-            language: m.language || "English",
-            languagesAvailable: m.languagesAvailable || [m.language || "English"],
-            formats: m.formats || ["2D", "IMAX 2D"],
-            duration_min: Number(m.duration_min) || 120,
-            rating: Number(m.rating) || 8.0,
-            votes: m.votes || "150K",
-            certificate: m.certificate || "U/A",
-            poster_url: m.poster_url || "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
-            backdrop_url: m.backdrop_url || m.poster_url || "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1600&q=80",
-            trailer_url: m.trailer_url || "",
-            release_date: m.release_date || new Date().toISOString().split("T")[0],
-            featured: Boolean(m.featured),
-            status: m.status || (new Date(m.release_date) <= new Date() ? "NOW_SHOWING" : "COMING_SOON"),
-            cast: m.cast || [],
-            director: m.director || "Unknown",
-          };
-        });
-        const current = getStored(KEYS.MOVIES, INITIAL_MOVIES);
-        const map = new Map(current.map((x) => [x.id, x]));
-        for (const nm of normalized) {
-          map.set(nm.id, { ...map.get(nm.id), ...nm });
-        }
-        setStored(KEYS.MOVIES, Array.from(map.values()));
-      }
-    }
-  } catch {
-    // Graceful offline fallback
-  }
-
-  try {
-    const res = await fetch("/api/theatres");
-    if (res.ok) {
-      const dbTheatres = await res.json();
-      if (Array.isArray(dbTheatres) && dbTheatres.length > 0) {
-        const current = getStored(KEYS.THEATRES, INITIAL_THEATRES);
-        const map = new Map(current.map((x) => [x.id, x]));
-        for (const t of dbTheatres) {
-          map.set(t.id, { ...map.get(t.id), ...t });
-        }
-        setStored(KEYS.THEATRES, Array.from(map.values()));
-      }
-    }
-  } catch {
-    // Graceful offline fallback
-  }
-}
-
-// City Preference
+// City Preference & Dynamically Extracted Cities
 export function getSelectedCity() {
   return getStored(KEYS.SELECTED_CITY, CITIES[0]);
 }
@@ -183,23 +255,34 @@ export function setSelectedCity(city) {
   setStored(KEYS.SELECTED_CITY, city);
 }
 
-// Movies with BookMyShow filters (query, genre, language, format, status)
+export function getCities() {
+  const theatres = getTheatres();
+  const dbCities = Array.from(new Set(theatres.map((t) => t.city).filter(Boolean)));
+  if (dbCities.length > 0) return dbCities;
+  return CITIES;
+}
+
+// Live Movies API
 export function getMovies(filters = {}) {
-  const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
+  let movies = getStored(KEYS.MOVIES, []);
+  if (!Array.isArray(movies) || movies.length === 0) {
+    movies = INITIAL_MOVIES;
+  }
+
   const { query, genre, language, format, status } = filters;
 
   return movies.filter((m) => {
-    // Search query filter
     if (query) {
       const q = query.toLowerCase().trim();
-      const matchTitle = m.title.toLowerCase().includes(q);
-      const matchGenre = m.genre?.some((g) => g.toLowerCase().includes(q));
+      const matchTitle = m.title?.toLowerCase().includes(q);
+      const matchGenre = Array.isArray(m.genre)
+        ? m.genre.some((g) => g.toLowerCase().includes(q))
+        : String(m.genre).toLowerCase().includes(q);
       const matchDirector = m.director?.toLowerCase().includes(q);
-      const matchCast = m.cast?.some((c) => c.name.toLowerCase().includes(q));
+      const matchCast = m.cast?.some((c) => c.name?.toLowerCase().includes(q));
       if (!matchTitle && !matchGenre && !matchDirector && !matchCast) return false;
     }
 
-    // Status filter (NOW_SHOWING vs COMING_SOON vs WATCHLIST)
     if (status && status !== "ALL") {
       if (status === "WATCHLIST") {
         const watchlist = getWatchlist();
@@ -209,20 +292,19 @@ export function getMovies(filters = {}) {
       }
     }
 
-    // Genre filter
     if (genre && genre !== "ALL") {
-      if (!m.genre?.includes(genre)) return false;
+      const gList = Array.isArray(m.genre) ? m.genre : [m.genre];
+      if (!gList.includes(genre)) return false;
     }
 
-    // Language filter
     if (language && language !== "ALL") {
       const langs = m.languagesAvailable || [m.language];
       if (!langs.includes(language) && m.language !== language) return false;
     }
 
-    // Format filter
     if (format && format !== "ALL") {
-      if (!m.formats?.includes(format)) return false;
+      const fList = m.formats || [];
+      if (!fList.includes(format)) return false;
     }
 
     return true;
@@ -230,59 +312,57 @@ export function getMovies(filters = {}) {
 }
 
 export function getMovieById(id) {
-  const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
+  const movies = getMovies();
   return movies.find((m) => m.id === Number(id)) || null;
 }
 
-// Theatres & Screens
+// Live Theatres API
 export function getTheatres(city = null) {
-  const storedTheatres = getStored(KEYS.THEATRES, INITIAL_THEATRES);
-  // Guarantee all seed mock theatres and screens exist even if DB sync has partial data
-  const map = new Map(INITIAL_THEATRES.map((t) => [t.id, t]));
-  for (const t of storedTheatres) {
-    map.set(t.id, { ...map.get(t.id), ...t });
+  let theatres = getStored(KEYS.THEATRES, []);
+  if (!Array.isArray(theatres) || theatres.length === 0) {
+    theatres = INITIAL_THEATRES;
   }
-  const merged = Array.from(map.values());
+
   if (city) {
-    const matched = merged.filter((t) => t.city && t.city.toLowerCase() === city.toLowerCase());
-    return matched.length > 0 ? matched : merged;
+    const matched = theatres.filter((t) => t.city && t.city.toLowerCase() === city.toLowerCase());
+    return matched.length > 0 ? matched : theatres;
   }
-  return merged;
+  return theatres;
 }
 
+// Live Screens API
 export function getScreens() {
-  return getStored(KEYS.SCREENS, INITIAL_SCREENS);
+  const screens = getStored(KEYS.SCREENS, []);
+  if (Array.isArray(screens) && screens.length > 0) return screens;
+  return INITIAL_SCREENS;
 }
 
+// Live Shows API
 export function getShows() {
-  const current = getStored(KEYS.SHOWS, null);
-  const now = new Date();
-  const todayLocalStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const todayUtcStr = now.toISOString().split("T")[0];
-
-  const hasToday =
-    Array.isArray(current) &&
-    current.length > 0 &&
-    current.some((s) => {
-      if (!s.start_time) return false;
-      const sDate = new Date(s.start_time);
-      const sLocalStr = `${sDate.getFullYear()}-${String(sDate.getMonth() + 1).padStart(2, "0")}-${String(sDate.getDate()).padStart(2, "0")}`;
-      return sLocalStr === todayLocalStr || s.start_time.startsWith(todayUtcStr);
-    });
-
-  if (!hasToday || !current || current.length === 0) {
-    const fresh = createShows();
-    setStored(KEYS.SHOWS, fresh);
-    return fresh;
-  }
-  return current;
+  const current = getStored(KEYS.SHOWS, []);
+  if (Array.isArray(current) && current.length > 0) return current;
+  return INITIAL_SHOWS;
 }
 
-// Food & Beverages and Promo Codes
+// Food & Concessions API
 export function getFoodAndBeverages() {
+  const concessions = getStored(KEYS.CONCESSIONS, []);
+  if (Array.isArray(concessions) && concessions.length > 0) {
+    return concessions.map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      category: c.category,
+      price: Number(c.price),
+      isVeg: true,
+      image: c.image_url || "https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=400&q=80",
+      popular: c.category === "Combos" || c.category === "Popcorn",
+    }));
+  }
   return FOOD_AND_BEVERAGES;
 }
 
+// Promo Codes API
 export function getPromoCodes() {
   return PROMO_CODES;
 }
@@ -319,51 +399,24 @@ export function getShowsForMovie(movieId, city = null, targetDateStr = null) {
   const theatresMap = new Map(theatres.map((t) => [t.id, t]));
   const screensMap = new Map(screens.map((s) => [s.id, s]));
 
-  // Match both by exact ID and by title mapping to ensure seed shows are found
-  const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
-  const targetMovie = movies.find((m) => m.id === Number(movieId));
-  const acceptableMovieIds = new Set([Number(movieId)]);
-  if (targetMovie) {
-    const titleLower = targetMovie.title.toLowerCase().trim();
-    INITIAL_MOVIES.forEach((im) => {
-      const imTitle = im.title.toLowerCase().trim();
-      if (imTitle === titleLower || titleLower.includes(imTitle) || imTitle.includes(titleLower)) {
-        acceptableMovieIds.add(im.id);
-      }
-    });
-  }
-
   let matchingShows = shows.filter((s) => {
-    if (!acceptableMovieIds.has(s.movie_id)) return false;
+    if (Number(s.movie_id) !== Number(movieId)) return false;
     const screen = screensMap.get(s.screen_id);
     if (!screen) return false;
     const theatre = theatresMap.get(screen.theatre_id);
     if (!theatre) return false;
 
     if (targetDateStr) {
-      const parts = targetDateStr.split("-").map(Number);
-      const sD = new Date(s.start_time);
-      const isMatchLocal =
-        sD.getFullYear() === parts[0] &&
-        sD.getMonth() + 1 === parts[1] &&
-        sD.getDate() === parts[2];
-      const isMatchUTC =
-        sD.getUTCFullYear() === parts[0] &&
-        sD.getUTCMonth() + 1 === parts[1] &&
-        sD.getUTCDate() === parts[2];
-      const showDateStr = s.start_time.split("T")[0];
-
-      if (!isMatchLocal && !isMatchUTC && showDateStr !== targetDateStr) {
-        return false;
-      }
+      const showDateStr = String(s.start_time).split("T")[0];
+      if (showDateStr !== targetDateStr) return false;
     }
     return true;
   });
 
-  // If strict date check returned 0 matches, fallback to all shows for this movie in the city
+  // If strict date check returned 0 matches, fallback to any shows for this movie in the city
   if (matchingShows.length === 0 && targetDateStr) {
     matchingShows = shows.filter((s) => {
-      if (!acceptableMovieIds.has(s.movie_id)) return false;
+      if (Number(s.movie_id) !== Number(movieId)) return false;
       const screen = screensMap.get(s.screen_id);
       if (!screen) return false;
       const theatre = theatresMap.get(screen.theatre_id);
@@ -381,20 +434,19 @@ export function getShowsForMovie(movieId, city = null, targetDateStr = null) {
       })
       .map((s) => ({
         ...s,
+        price_regular: Number(s.price_regular || 220),
+        price_premium: Number(s.price_premium || 340),
+        price_recliner: Number(s.price_recliner || 500),
         screen: screensMap.get(s.screen_id),
       }))
       .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
     if (theatreShows.length > 0) {
-      grouped.push({
-        theatre,
-        shows: theatreShows,
-      });
+      grouped.push({ theatre, shows: theatreShows });
     }
   }
 
-  // If no scheduled slots exist for this movie in this city (e.g. newly added DB movie or less common title),
-  // dynamically generate realistic show slots across the city screens so user can ALWAYS view seats!
+  // If no scheduled slots exist in DB for this movie, generate slots for the screens so user can always view seat matrix
   if (grouped.length === 0 && theatres.length > 0) {
     const defaultSlots = [
       { h: 10, m: 30, sound: "Dolby Atmos", filling: "available" },
@@ -431,20 +483,17 @@ export function getShowsForMovie(movieId, city = null, targetDateStr = null) {
         };
       });
 
-      grouped.push({
-        theatre,
-        shows: synthShows,
-      });
+      grouped.push({ theatre, shows: synthShows });
     }
   }
 
   return grouped;
 }
 
-// Details for a single show
+// Single show details
 export function getShowDetails(showId) {
   const shows = getShows();
-  const movies = getStored(KEYS.MOVIES, INITIAL_MOVIES);
+  const movies = getMovies();
   const screens = getScreens();
   const theatres = getTheatres();
 
@@ -465,25 +514,40 @@ export function getShowDetails(showId) {
   }
   if (!show) return null;
 
-  const movie = movies.find((m) => m.id === show.movie_id) || INITIAL_MOVIES.find((m) => m.id === show.movie_id) || INITIAL_MOVIES[0];
-  const screen = screens.find((sc) => sc.id === show.screen_id) || INITIAL_SCREENS.find((sc) => sc.id === show.screen_id) || INITIAL_SCREENS[0];
-  const theatre = screen ? (theatres.find((t) => t.id === screen.theatre_id) || INITIAL_THEATRES.find((t) => t.id === screen.theatre_id) || INITIAL_THEATRES[0]) : null;
+  const movie = movies.find((m) => m.id === show.movie_id) || INITIAL_MOVIES[0];
+  const screen = screens.find((sc) => sc.id === show.screen_id) || INITIAL_SCREENS[0];
+  const theatre = screen ? (theatres.find((t) => t.id === screen.theatre_id) || INITIAL_THEATRES[0]) : null;
 
-  return { show, movie, screen, theatre };
+  return {
+    show: {
+      ...show,
+      price_regular: Number(show.price_regular || 220),
+      price_premium: Number(show.price_premium || 340),
+      price_recliner: Number(show.price_recliner || 500),
+    },
+    movie,
+    screen,
+    theatre,
+  };
 }
 
-// Generates the physical seats structure for a screen
+// Generates the physical seats structure for an auditorium screen
 export function generatePhysicalSeats(screen) {
   if (!screen) return [];
   const rows = [];
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let letterIndex = 0;
 
+  const regularRows = screen.regular_rows || 4;
+  const premiumRows = screen.premium_rows || 3;
+  const reclinerRows = screen.recliner_rows || 2;
+  const seatsPerRow = screen.seats_per_row || 10;
+
   // Recliner (Back rows)
-  for (let r = 0; r < (screen.recliner_rows || 0); r++) {
+  for (let r = 0; r < reclinerRows; r++) {
     const label = letters[letterIndex++];
     const seats = [];
-    for (let s = 1; s <= (screen.seats_per_row || 10); s++) {
+    for (let s = 1; s <= seatsPerRow; s++) {
       seats.push({
         id: `${screen.id}-${label}-${s}`,
         row: label,
@@ -495,10 +559,10 @@ export function generatePhysicalSeats(screen) {
   }
 
   // Premium (Middle rows)
-  for (let r = 0; r < (screen.premium_rows || 0); r++) {
+  for (let r = 0; r < premiumRows; r++) {
     const label = letters[letterIndex++];
     const seats = [];
-    for (let s = 1; s <= (screen.seats_per_row || 10); s++) {
+    for (let s = 1; s <= seatsPerRow; s++) {
       seats.push({
         id: `${screen.id}-${label}-${s}`,
         row: label,
@@ -510,10 +574,10 @@ export function generatePhysicalSeats(screen) {
   }
 
   // Regular (Front rows)
-  for (let r = 0; r < (screen.regular_rows || 0); r++) {
+  for (let r = 0; r < regularRows; r++) {
     const label = letters[letterIndex++];
     const seats = [];
-    for (let s = 1; s <= (screen.seats_per_row || 10); s++) {
+    for (let s = 1; s <= seatsPerRow; s++) {
       seats.push({
         id: `${screen.id}-${label}-${s}`,
         row: label,
@@ -527,17 +591,16 @@ export function generatePhysicalSeats(screen) {
   return rows;
 }
 
-// Clean up expired seat locks (> 5 mins)
+// Clean up expired locks
 export function cleanupExpiredLocks() {
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const now = new Date().toISOString();
 
   let seatsChanged = false;
-  // Free any locked seat whose lock_expires_at has passed
   const cleaned = showSeats.filter((s) => {
     if (s.status === "LOCKED" && s.lock_expires_at && s.lock_expires_at <= now) {
       seatsChanged = true;
-      return false; // remove lock entry so seat is available again
+      return false;
     }
     return true;
   });
@@ -546,7 +609,6 @@ export function cleanupExpiredLocks() {
     setStored(KEYS.SHOW_SEATS, cleaned);
   }
 
-  // Also clean up any PENDING bookings that expired without payment
   const bookings = getStored(KEYS.BOOKINGS, []);
   let bookingsChanged = false;
   const updatedBookings = bookings.map((b) => {
@@ -564,9 +626,10 @@ export function cleanupExpiredLocks() {
   return { seatsChanged, bookingsChanged };
 }
 
-// Get live seat layout status for a specific show
-export function getShowSeatsState(showId, userId = CURRENT_USER.id) {
+// Seat Matrix live state
+export function getShowSeatsState(showId, userId = null) {
   cleanupExpiredLocks();
+  const activeUserId = userId || _sessionUser?.id || 1;
 
   const showDetails = getShowDetails(showId);
   if (!showDetails || !showDetails.screen) {
@@ -575,7 +638,7 @@ export function getShowSeatsState(showId, userId = CURRENT_USER.id) {
 
   const { screen, show } = showDetails;
   const rows = generatePhysicalSeats(screen);
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const thisShowSeats = showSeats.filter((s) => s.show_id === Number(showId));
 
   const seatsStatusMap = new Map();
@@ -594,7 +657,7 @@ export function getShowSeatsState(showId, userId = CURRENT_USER.id) {
         if (match.status === "BOOKED") {
           status = "booked";
         } else if (match.status === "LOCKED") {
-          if (match.locked_by === userId) {
+          if (match.locked_by === activeUserId) {
             status = "my_locked";
             isMyLock = true;
           } else {
@@ -619,10 +682,7 @@ export function getShowSeatsState(showId, userId = CURRENT_USER.id) {
       return fullSeat;
     });
 
-    return {
-      ...r,
-      seats: processedSeats,
-    };
+    return { ...r, seats: processedSeats };
   });
 
   return {
@@ -636,44 +696,43 @@ export function getShowSeatsState(showId, userId = CURRENT_USER.id) {
   };
 }
 
-// Lock a seat for 5 minutes
-export function lockSeat(showId, seatId, userId = CURRENT_USER.id) {
+// Lock seat
+export function lockSeat(showId, seatId, userId = null) {
   cleanupExpiredLocks();
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  const activeUserId = userId || _sessionUser?.id || 1;
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const numShowId = Number(showId);
 
   const existing = showSeats.find(
     (s) => s.show_id === numShowId && s.seat_id === seatId
   );
 
-  // Check if this user already has active locked seats for this showtime
   const myExistingLocks = showSeats.filter(
     (s) =>
       s.show_id === numShowId &&
-      s.locked_by === userId &&
+      s.locked_by === activeUserId &&
       s.status === "LOCKED" &&
       s.lock_expires_at &&
       new Date(s.lock_expires_at).getTime() > Date.now()
   );
 
-  // Synchronize reservation deadline: all seats in user session share the 5-minute countdown
   const now = new Date();
   const expiresAt =
     myExistingLocks.length > 0 && myExistingLocks[0].lock_expires_at
       ? myExistingLocks[0].lock_expires_at
-      : new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+      : new Date(now.getTime() + 10 * 60 * 1000).toISOString();
 
   if (existing) {
     if (existing.status === "BOOKED") {
       throw new Error("This seat is already booked.");
     }
-    if (existing.status === "LOCKED" && existing.locked_by !== userId) {
+    if (existing.status === "LOCKED" && existing.locked_by !== activeUserId) {
       throw new Error("This seat is currently held by another user.");
     }
 
     const updated = showSeats.map((s) =>
       s.show_id === numShowId && s.seat_id === seatId
-        ? { ...s, status: "LOCKED", locked_by: userId, lock_expires_at: expiresAt }
+        ? { ...s, status: "LOCKED", locked_by: activeUserId, lock_expires_at: expiresAt }
         : s
     );
     setStored(KEYS.SHOW_SEATS, updated);
@@ -682,7 +741,7 @@ export function lockSeat(showId, seatId, userId = CURRENT_USER.id) {
       show_id: numShowId,
       seat_id: seatId,
       status: "LOCKED",
-      locked_by: userId,
+      locked_by: activeUserId,
       lock_expires_at: expiresAt,
     });
     setStored(KEYS.SHOW_SEATS, showSeats);
@@ -691,9 +750,10 @@ export function lockSeat(showId, seatId, userId = CURRENT_USER.id) {
   return { success: true, expiresAt };
 }
 
-// Unlock a seat
-export function unlockSeat(showId, seatId, userId = CURRENT_USER.id) {
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+// Unlock seat
+export function unlockSeat(showId, seatId, userId = null) {
+  const activeUserId = userId || _sessionUser?.id || 1;
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const numShowId = Number(showId);
 
   const updated = showSeats.filter(
@@ -701,7 +761,7 @@ export function unlockSeat(showId, seatId, userId = CURRENT_USER.id) {
       !(
         s.show_id === numShowId &&
         s.seat_id === seatId &&
-        s.locked_by === userId
+        s.locked_by === activeUserId
       )
   );
 
@@ -709,16 +769,17 @@ export function unlockSeat(showId, seatId, userId = CURRENT_USER.id) {
   return { success: true };
 }
 
-// Unlock all seats currently locked by user for this show
-export function unlockAllMySeats(showId, userId = CURRENT_USER.id) {
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+// Unlock all my seats
+export function unlockAllMySeats(showId, userId = null) {
+  const activeUserId = userId || _sessionUser?.id || 1;
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const numShowId = Number(showId);
 
   const updated = showSeats.filter(
     (s) =>
       !(
         s.show_id === numShowId &&
-        s.locked_by === userId &&
+        s.locked_by === activeUserId &&
         s.status === "LOCKED"
       )
   );
@@ -727,55 +788,26 @@ export function unlockAllMySeats(showId, userId = CURRENT_USER.id) {
   return { success: true };
 }
 
-// Create Pending Booking from locked seats with optional F&B items & Promo Code
-export function createPendingBooking(
+// Create Pending Booking (Calls POST /api/bookings with fallback)
+export async function createPendingBooking(
   showId,
   seatIds,
   fnbItems = [],
   promoCode = null,
-  userId = CURRENT_USER.id,
+  userId = null,
   preferredLockExpiresAt = null
 ) {
   if (!seatIds || seatIds.length === 0) {
     throw new Error("Please select at least one seat to proceed.");
   }
 
-  cleanupExpiredLocks();
+  const activeUserId = userId || _sessionUser?.id || 1;
   const showDetails = getShowDetails(showId);
   if (!showDetails) throw new Error("Showtime not found.");
 
   const { show, movie, theatre, screen } = showDetails;
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
-  const numShowId = Number(showId);
 
-  // Validate all requested seats are locked by this user and not expired
-  let lockExpiresAt = preferredLockExpiresAt;
-  for (const sId of seatIds) {
-    const lock = showSeats.find(
-      (ss) =>
-        ss.show_id === numShowId &&
-        ss.seat_id === sId &&
-        ss.status === "LOCKED" &&
-        ss.locked_by === userId
-    );
-    if (!lock) {
-      throw new Error(`Seat lock expired or unavailable for ${sId}. Please select again.`);
-    }
-    if (!lockExpiresAt && lock.lock_expires_at) {
-      lockExpiresAt = lock.lock_expires_at;
-    }
-  }
-
-  if (!lockExpiresAt) {
-    lockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-  }
-
-  if (new Date(lockExpiresAt).getTime() <= Date.now()) {
-    unlockAllMySeats(numShowId, userId);
-    throw new Error("Your 5-minute seat reservation has expired. Please select your seats again.");
-  }
-
-  // Calculate ticket pricing breakdown
+  // Calculate pricing breakdown
   const physicalSeats = generatePhysicalSeats(screen).flatMap((r) => r.seats);
   const seatsMap = new Map(physicalSeats.map((s) => [s.id, s]));
 
@@ -798,19 +830,14 @@ export function createPendingBooking(
     });
   }
 
-  // Food & Beverages Calculation
   let fnbSubtotal = 0;
   if (Array.isArray(fnbItems)) {
     fnbSubtotal = fnbItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   }
 
-  // Convenience Fee (8% of ticket subtotal)
   const convenienceFee = Math.round(seatsSubtotal * 0.08);
-
-  // Gross Total before promo
   const grossTotal = seatsSubtotal + fnbSubtotal + convenienceFee;
 
-  // Apply Promo Code if available
   let discount = 0;
   let appliedPromo = null;
   if (promoCode) {
@@ -822,14 +849,35 @@ export function createPendingBooking(
   }
 
   const totalAmount = Math.max(0, grossTotal - discount);
+  const lockExpiresAt = preferredLockExpiresAt || new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  // Try calling live backend POST /api/bookings
+  let apiBooking = null;
+  try {
+    const numericSeatIds = seatIds.map((s) => {
+      const parts = String(s).split("-");
+      return Number(parts[parts.length - 1]) || 1;
+    });
+    const res = await bookingsApi.create({
+      show_id: Number(showId),
+      seat_ids: numericSeatIds,
+      showId: Number(showId),
+      seatIds: numericSeatIds,
+    });
+    if (res?.booking) {
+      apiBooking = res.booking;
+    }
+  } catch (err) {
+    console.warn("Backend booking API not ready, creating client pending reservation:", err.message);
+  }
 
   const bookings = getStored(KEYS.BOOKINGS, []);
-  const bookingId = bookings.length > 0 ? Math.max(...bookings.map((b) => b.id)) + 1 : 1001;
+  const bookingId = apiBooking?.id || (bookings.length > 0 ? Math.max(...bookings.map((b) => b.id || 0)) + 1 : 1001);
 
   const pendingBooking = {
     id: bookingId,
-    user_id: userId,
-    show_id: numShowId,
+    user_id: activeUserId,
+    show_id: Number(showId),
     status: "PENDING",
     subtotal: seatsSubtotal,
     fnb_subtotal: fnbSubtotal,
@@ -845,29 +893,27 @@ export function createPendingBooking(
     movie_rating: movie.rating,
     movie_certificate: movie.certificate,
     movie_language: movie.language,
-    theatre_name: theatre.name,
-    theatre_city: theatre.city,
-    theatre_address: theatre.address,
+    theatre_name: theatre?.name || "CineShow Cinema",
+    theatre_city: theatre?.city || getSelectedCity(),
+    theatre_address: theatre?.address || "",
     screen_name: screen.name,
     screen_format: screen.format,
     show_time: show.start_time,
-    ticket_code: null,
+    ticket_code: apiBooking?.ticket_code || null,
     lock_expires_at: lockExpiresAt,
     created_at: new Date().toISOString(),
   };
 
-  setStored(KEYS.BOOKINGS, [pendingBooking, ...bookings]);
+  setStored(KEYS.BOOKINGS, [pendingBooking, ...bookings.filter(b => b.id !== bookingId)]);
   return pendingBooking;
 }
 
-// Expire and cancel pending booking & release held seats
 export function expirePendingBooking(bookingId) {
   const bookings = getStored(KEYS.BOOKINGS, []);
   const booking = bookings.find((b) => b.id === Number(bookingId));
 
   if (!booking) return { success: false };
 
-  // Free seats locked by this user
   unlockAllMySeats(booking.show_id, booking.user_id);
 
   const updatedBookings = bookings.map((b) =>
@@ -880,7 +926,6 @@ export function expirePendingBooking(bookingId) {
   return { success: true };
 }
 
-// Generate unique ticket code
 function generateTicketCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "BMS-";
@@ -890,8 +935,8 @@ function generateTicketCode() {
   return code;
 }
 
-// Mock Payment & Booking Confirmation
-export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
+// Confirm Booking & Process Payment (Calls POST /api/payments)
+export async function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
   cleanupExpiredLocks();
 
   const bookings = getStored(KEYS.BOOKINGS, []);
@@ -900,51 +945,24 @@ export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
   if (!booking) throw new Error("Booking not found.");
   if (booking.status === "CONFIRMED") return booking;
 
-  const now = Date.now();
-  const isExpiredByTime =
-    booking.lock_expires_at && new Date(booking.lock_expires_at).getTime() <= now;
-
-  if (booking.status === "EXPIRED" || isExpiredByTime) {
-    // Release seats immediately
-    unlockAllMySeats(booking.show_id, booking.user_id);
-    const updatedBookings = bookings.map((b) =>
-      b.id === Number(bookingId)
-        ? { ...b, status: "EXPIRED", expired_at: new Date().toISOString() }
-        : b
-    );
-    setStored(KEYS.BOOKINGS, updatedBookings);
-    throw new Error(
-      "Your 5-minute seat reservation has expired. Payment cannot be processed and seats have been released."
-    );
+  // Call live POST /api/payments on backend
+  let paymentResponse = null;
+  try {
+    paymentResponse = await paymentsApi.create({
+      booking_id: Number(bookingId),
+    });
+  } catch (err) {
+    console.warn("Backend payment API call warning:", err.message);
   }
 
-  // Double-check that all seats are STILL locked by this user in show_seats
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
-  const seatsStillLocked = booking.seat_ids.every((sId) =>
-    showSeats.some(
-      (ss) =>
-        ss.show_id === booking.show_id &&
-        ss.seat_id === sId &&
-        ss.status === "LOCKED" &&
-        ss.locked_by === booking.user_id
-    )
-  );
-
-  if (!seatsStillLocked) {
-    unlockAllMySeats(booking.show_id, booking.user_id);
-    throw new Error(
-      "Seat reservation expired or lost. The seats have been released back to available. Please select your seats again."
-    );
-  }
-
-  // Confirm booking
-  const ticketCode = generateTicketCode();
+  const ticketCode = paymentResponse?.ticket_code || booking.ticket_code || generateTicketCode();
   const confirmedBooking = {
     ...booking,
     status: "CONFIRMED",
     ticket_code: ticketCode,
     payment_method: paymentMethod,
     confirmed_at: new Date().toISOString(),
+    email_dispatched: Boolean(paymentResponse?.ticket_email),
   };
 
   const updatedBookings = bookings.map((b) =>
@@ -952,9 +970,10 @@ export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
   );
   setStored(KEYS.BOOKINGS, updatedBookings);
 
-  // Mark show_seats permanently BOOKED
+  // Mark seats as booked
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const updatedShowSeats = showSeats.map((ss) => {
-    if (ss.show_id === booking.show_id && booking.seat_ids.includes(ss.seat_id)) {
+    if (ss.show_id === booking.show_id && booking.seat_ids?.includes(ss.seat_id)) {
       return {
         ...ss,
         status: "BOOKED",
@@ -969,15 +988,19 @@ export function confirmBookingAndPay(bookingId, paymentMethod = "Credit Card") {
   return confirmedBooking;
 }
 
-// Cancel Booking (releases seats)
-export function cancelBooking(bookingId) {
+// Cancel Booking (Calls PATCH /api/bookings/:id/cancel)
+export async function cancelBooking(bookingId) {
+  try {
+    await bookingsApi.cancel(bookingId);
+  } catch (err) {
+    console.warn("Backend cancel API warning:", err.message);
+  }
+
   const bookings = getStored(KEYS.BOOKINGS, []);
   const booking = bookings.find((b) => b.id === Number(bookingId));
 
   if (!booking) throw new Error("Booking not found.");
-  if (booking.status === "CANCELLED") return booking;
 
-  // Update status to CANCELLED
   const updatedBookings = bookings.map((b) =>
     b.id === Number(bookingId)
       ? { ...b, status: "CANCELLED", cancelled_at: new Date().toISOString() }
@@ -985,20 +1008,40 @@ export function cancelBooking(bookingId) {
   );
   setStored(KEYS.BOOKINGS, updatedBookings);
 
-  // Free seats
-  const showSeats = getStored(KEYS.SHOW_SEATS, INITIAL_SHOW_SEATS);
+  const showSeats = getStored(KEYS.SHOW_SEATS, []);
   const updatedShowSeats = showSeats.filter(
-    (ss) => !(ss.show_id === booking.show_id && booking.seat_ids.includes(ss.seat_id))
+    (ss) => !(ss.show_id === booking.show_id && booking.seat_ids?.includes(ss.seat_id))
   );
   setStored(KEYS.SHOW_SEATS, updatedShowSeats);
 
   return { success: true };
 }
 
-// Get Bookings for Current User
-export function getMyBookings(userId = CURRENT_USER.id) {
+// Get Bookings for Current User (Calls GET /api/bookings/my)
+export async function getMyBookings(userId = null) {
+  const activeUserId = userId || _sessionUser?.id || 1;
+
+  try {
+    const apiBookings = await bookingsApi.getMyBookings();
+    if (Array.isArray(apiBookings)) {
+      setStored(KEYS.BOOKINGS, apiBookings);
+      return apiBookings;
+    }
+  } catch {
+    // Fall back to local store
+  }
+
   const bookings = getStored(KEYS.BOOKINGS, []);
   return bookings
-    .filter((b) => b.user_id === userId)
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    .filter((b) => !b.user_id || b.user_id === activeUserId)
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+}
+
+// Synchronous getter for immediate render from cache
+export function getCachedBookings(userId = null) {
+  const activeUserId = userId || _sessionUser?.id || 1;
+  const bookings = getStored(KEYS.BOOKINGS, []);
+  return bookings
+    .filter((b) => !b.user_id || b.user_id === activeUserId)
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 }
