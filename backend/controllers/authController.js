@@ -27,10 +27,15 @@ const transporter = nodemailer.createTransport({
 
 const ACCESS_TTL = 15 * 60;
 
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  process.env.RENDER === "true" ||
+  Boolean(process.env.RENDER_SERVICE_ID);
+
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
   path: "/",
   maxAge: ACCESS_TTL * 1000,
 };
@@ -204,8 +209,21 @@ export async function verifyOtp(req, res) {
 
     const user = result.rows[0];
 
+    const token = jwt.sign(
+      { sub: String(user.id) },
+      JWT_SECRET,
+      {
+        expiresIn: ACCESS_TTL,
+        algorithm: "HS256",
+        jwtid: crypto.randomUUID(),
+      }
+    );
+
+    res.cookie("at", token, cookieOptions);
+
     return res.status(201).json({
       message: "Email verified and account created successfully.",
+      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -308,6 +326,7 @@ export async function login(req, res) {
 
     return res.status(200).json({
       message: "Login successful.",
+      token,
       user: publicUser(user),
     });
   } catch (error) {

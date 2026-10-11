@@ -3,16 +3,21 @@
  * Connects frontend directly to backend Express APIs with cookie-based JWT sessions.
  */
 
-const BASE_URL = "";
+import { API_BASE_URL } from "../config/apiConfig";
+
+const BASE_URL = API_BASE_URL;
 
 async function request(path, options = {}) {
-  const url = path.startsWith("http") ? path : `${BASE_URL}${path}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = path.startsWith("http") ? path : `${BASE_URL}${normalizedPath}`;
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("cine_auth_token") : null;
   const config = {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       "X-Requested-With": "fetch",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   };

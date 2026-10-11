@@ -10,6 +10,8 @@ import {
   logout,
 } from "../controllers/authController.js";
 
+import { requireAuth } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 const emailSchema = z
@@ -38,7 +40,13 @@ const loginSchema = z.object({
 
 const verifyOtpSchema = z.object({
   email: emailSchema,
-  otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits."),
+  otp: z.string().optional(),
+  code: z.string().optional(),
+}).transform((data) => ({
+  ...data,
+  otp: data.otp || data.code,
+})).refine((data) => data.otp && /^\d{6}$/.test(data.otp), {
+  message: "OTP must be exactly 6 digits.",
 });
 
 const resendOtpSchema = z.object({
@@ -59,6 +67,10 @@ function validate(schema) {
     next();
   };
 }
+
+router.get("/me", requireAuth, (req, res) => {
+  res.json({ user: req.user });
+});
 
 router.post("/register", validate(registerSchema), register);
 router.post("/verify-otp", validate(verifyOtpSchema), verifyOtp);

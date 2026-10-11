@@ -1,19 +1,32 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { API_BASE_URL } from "../config/apiConfig";
 
-/** fetch wrapper: same-origin cookies, CSRF header, one silent refresh on 401. */
+/** fetch wrapper: cross-origin cookies + Bearer token header, CSRF header. */
 async function call(path, body, retry = true) {
-  const res = await fetch(`/api/auth/${path}`, {
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("cine_auth_token") : null;
+  const res = await fetch(`${API_BASE_URL}/api/auth/${path}`, {
     method: body === undefined ? "GET" : "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json", "X-Requested-With": "fetch" },
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "fetch",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (res.status === 401 && retry && !["login", "refresh", "logout"].includes(path)) {
-    if ((await fetch("/api/auth/refresh", { method: "POST", headers: { "X-Requested-With": "fetch" } })).ok)
-      return call(path, body, false);
+  if (res.status === 401 && retry && !["login", "refresh", "logout", "me"].includes(path)) {
+    const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "X-Requested-With": "fetch" },
+    }).catch(() => null);
+    if (refreshRes && refreshRes.ok) return call(path, body, false);
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(data.error || "Request failed"), data);
+  if (!res.ok) throw Object.assign(new Error(data.error || data.message || "Request failed"), data);
+  if (data?.token && typeof localStorage !== "undefined") {
+    localStorage.setItem("cine_auth_token", data.token);
+  }
   return data;
 }
 
@@ -26,11 +39,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    call("me").then((d) => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
+    call("me")
+      .then((d) => setUser(d.user))
+      .catch(() => {
+        // Clear token if invalid
+        if (typeof localStorage !== "undefined") {
+          localStorage.removeItem("cine_auth_token");
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const logout = useCallback(async () => {
     await call("logout", {}).catch(() => {});
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("cine_auth_token");
+    }
     setUser(null);
   }, []);
 

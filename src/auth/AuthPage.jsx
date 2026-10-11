@@ -7,6 +7,7 @@ import cineverseLogoImg from "../assets/cineverse-brand-logo.jpg";
 import clapperBadgeImg from "../assets/cinema-clapper-badge.jpg";
 import vipTicketBadgeImg from "../assets/cinema-vip-ticket-badge.jpg";
 import popcornBadgeImg from "../assets/cinema-popcorn-sticker.jpg";
+import BackendStatusWidget from "../components/common/BackendStatusWidget";
 import "./auth.css";
 
 function BioCineShowLogo() {
@@ -135,7 +136,7 @@ export default function AuthPage() {
     setInfo(`We emailed a 6-digit code to ${f.email}.`);
     setCooldown(60);
   });
-  const verify = submit(async () => setUser((await call("verify-otp", { email: f.email, code: f.code })).user));
+  const verify = submit(async () => setUser((await call("verify-otp", { email: f.email, otp: f.code, code: f.code })).user));
   const forgot = submit(async () => {
     await call("forgot", { email: f.email });
     go("reset");
@@ -163,6 +164,11 @@ export default function AuthPage() {
 
   return (
     <main className="cine-auth-root">
+      {/* Top Floating Backend Status & Server Wake Widget */}
+      <div className="cine-auth-status-bar">
+        <BackendStatusWidget />
+      </div>
+
       {/* LEFT CINEMA HERO PANEL */}
       <aside className="cine-hero-panel" aria-hidden="true">
         {/* Top Header with Brand Logo & Navigation */}
@@ -271,7 +277,16 @@ export default function AuthPage() {
 
           {/* Alert messages */}
           <div role="alert" aria-live="assertive">
-            {err && <div className="cine-msg err">{err}</div>}
+            {err && (
+              <div className="cine-msg err">
+                <div>{err}</div>
+                {err.toLowerCase().includes("failed") && (
+                  <div style={{ marginTop: 6, fontSize: "12px", opacity: 0.9 }}>
+                    Render free instances sleep after 15 mins. Use the <strong>Wake Server</strong> button in the top-right to wake it up!
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           {info && <div className="cine-msg ok" role="status">{info}</div>}
 

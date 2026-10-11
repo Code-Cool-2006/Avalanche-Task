@@ -21,11 +21,39 @@ dotenv.config();
 
 const app = express();
 
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  "https://avalanche-task.vercel.app",
+];
+if (process.env.CLIENT_ORIGIN) {
+  allowedOrigins.push(process.env.CLIENT_ORIGIN);
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 
@@ -48,8 +76,21 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    message: "MovieBooking backend is awake and healthy!",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 app.get("/", (_req, res) => {
-  res.json({ message: "MovieBooking backend is running." });
+  res.json({
+    status: "ok",
+    message: "MovieBooking backend is running.",
+    health: "/api/health",
+  });
 });
 
 const PORT = Number(process.env.PORT) || 4000;

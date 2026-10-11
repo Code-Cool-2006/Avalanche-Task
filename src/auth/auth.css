@@ -591,3 +591,19 @@
     padding: 36px 20px;
   }
 }
+
+/* Floating Status Bar in Auth Page */
+.cine-auth-status-bar {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 100;
+}
+
+@media (max-width: 600px) {
+  .cine-auth-status-bar {
+    top: 12px;
+    right: 12px;
+  }
+}
+

@@ -6,7 +6,12 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export const requireAuth = async (req, res, next) => {
   try {
-    const token = req.cookies?.at;
+    const authHeader = req.headers.authorization;
+    const bearerToken =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7).trim()
+        : null;
+    const token = req.cookies?.at || bearerToken;
 
     if (!token) {
       return res.status(401).json({ message: "Please log in first." });

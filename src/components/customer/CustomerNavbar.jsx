@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
+import BackendStatusWidget from "../common/BackendStatusWidget";
 
 export default function CustomerNavbar({
   selectedCity,
@@ -142,6 +143,9 @@ export default function CustomerNavbar({
 
         {/* Right Section: Location, My Bookings, Profile Avatar */}
         <div className="navbar-actions-right">
+          {/* Live Backend Status & Wake Widget */}
+          <BackendStatusWidget compact={true} />
+
           {/* Location Trigger */}
           <button
             type="button"

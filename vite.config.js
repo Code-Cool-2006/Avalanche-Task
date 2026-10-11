@@ -7,10 +7,26 @@ export default defineConfig({
   // same-origin API so SameSite=Strict cookies work
   server: {
     proxy: {
-      '/api': 'http://localhost:4000',
-      '/movies': 'http://localhost:4000',
-      '/theatres': 'http://localhost:4000',
-      '/screens': 'http://localhost:4000',
+      '/api': {
+        target: 'https://avalanche-task.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/movies': {
+        target: 'https://avalanche-task.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/theatres': {
+        target: 'https://avalanche-task.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/screens': {
+        target: 'https://avalanche-task.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })
